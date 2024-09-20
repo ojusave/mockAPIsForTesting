@@ -1,0 +1,18 @@
+{
+    "vtt_data": "00:00:00 --> 00:00:05 Luke: Welcome to today's engineering sprint planning meeting. 00:00:05 --> 00:00:15 Sarah: Thanks, Luke. Let’s begin by reviewing the progress from the last sprint. 00:00:15 --> 00:00:30 Jason: I’ll provide an update on the backend development for the new feature.",
+    
+    "summary": {
+      "summary_title": "Sprint Planning Meeting",
+      "summary_overview": "The team discussed the progress of the current sprint and planned for the next phase of development.",
+      "summary_details": [
+        "Luke opened the sprint meeting.",
+        "Sarah reviewed last sprint's outcomes.",
+        "Jason updated the team on backend development."
+      ],
+      "next_steps": [
+        "Continue with the next sprint tasks.",
+        "Ensure backend and frontend coordination."
+      ]
+    }
+  }
+  

@@ -1,0 +1,20 @@
+{
+    "vtt_data": "00:00:00 --> 00:00:05 Alex: Good afternoon everyone, thanks for joining. 00:00:05 --> 00:00:15 Jane: Let's start with our discussion on the marketing strategies for our upcoming product launch. 00:00:15 --> 00:00:30 Max: I’d like to add that we also need to address our competitor analysis. 00:00:30 --> 00:01:00 Alex: Absolutely, and we’ll also discuss the customer feedback we’ve received. 00:01:00 --> 00:02:00 Jane: I’d like to review the core metrics we’ll be tracking for this campaign.",
+    
+    "summary": {
+      "summary_title": "Marketing Strategy Meeting",
+      "summary_overview": "The meeting focused on the marketing strategies for the product launch and competitor analysis. Core metrics were discussed.",
+      "summary_details": [
+        "Alex opened the meeting discussing marketing strategies.",
+        "Jane reviewed the upcoming campaign plan.",
+        "Max brought up competitor analysis and customer feedback.",
+        "The team discussed metrics to track success."
+      ],
+      "next_steps": [
+        "Finalize the marketing campaign.",
+        "Conduct a deeper competitor analysis.",
+        "Hold a follow-up meeting next week."
+      ]
+    }
+  }
+  

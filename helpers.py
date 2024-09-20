@@ -3,29 +3,22 @@ import string
 import datetime
 import uuid
 import os
-import requests
 import json
-import threading
-import time
 from queue import Queue
+from threading import Lock
 
 # Base URL (replace zoom.us with ngrok URL)
 BASE_URL = "https://8a2325d6f247.ngrok.app"
 
-# Cerebras API settings
-CEREBRAS_API_KEY = os.environ.get("CEREBRAS_API_KEY", "csk-92wemnmk5y2962tjcdk55kph5edhhknnhe9382r8kt2rk4eh")
-CEREBRAS_API_URL = "https://api.cerebras.ai/v1/chat/completions"
+FILES_DIR = 'files'
 
-VTT_FILES_DIR = 'vtt_files'
-SUMMARIES_DIR = 'summary_files'
+# Ensure directory exists
+os.makedirs(FILES_DIR, exist_ok=True)
 
-# Ensure directories exist
-os.makedirs(VTT_FILES_DIR, exist_ok=True)
-os.makedirs(SUMMARIES_DIR, exist_ok=True)
-
-# Global storage for pre-generated content
-_pre_generated_content = []
-content_queue = Queue()
+# Global variables for file tracking
+used_files = set()
+available_files = []
+file_lock = Lock()
 
 # Expanded list of diverse names
 first_names = [
@@ -42,36 +35,39 @@ last_names = [
     "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores"
 ]
 
-# List of realistic meeting topics
-meeting_topics = [
-    "Quarterly Financial Review", "Product Roadmap Planning", "Team Building Workshop",
-    "Customer Feedback Analysis", "Marketing Strategy Session", "IT Infrastructure Upgrade",
-    "Employee Onboarding Process", "Sales Pipeline Review", "Agile Sprint Planning",
-    "Diversity and Inclusion Initiative", "Budget Allocation Discussion",
-    "New Market Expansion Opportunities", "Quality Assurance Procedures",
-    "Environmental Sustainability Measures", "Remote Work Policy Update",
-    "Data Privacy Compliance Training", "Supply Chain Optimization",
-    "Customer Service Improvement Strategies", "Employee Wellness Program",
-    "Artificial Intelligence Integration", "Corporate Social Responsibility",
-    "Risk Management Assessment", "Cybersecurity Threat Analysis",
-    "Talent Acquisition Strategies", "Product Launch Preparation",
-    "Competitor Analysis Presentation", "Crisis Management Protocol",
-    "Innovation Brainstorming Session", "Performance Review Standardization",
-    "Brand Identity Refresh Discussion"
-]
+def initialize_file_list():
+    global available_files
+    available_files = [f for f in os.listdir(FILES_DIR) if f.endswith('.json')]
+    if not available_files:
+        raise FileNotFoundError("No JSON files found in the /files directory")
 
-# Helper function to generate a random string
+def get_next_file_content():
+    global used_files, available_files
+    with file_lock:
+        if not available_files:
+            # All files have been used, reset the list
+            used_files.clear()
+            initialize_file_list()
+        
+        file_name = random.choice(available_files)
+        available_files.remove(file_name)
+        used_files.add(file_name)
+        
+        file_path = os.path.join(FILES_DIR, file_name)
+        with open(file_path, 'r') as file:
+            content = json.load(file)
+        
+        return content, file_name
+
 def generate_random_string(length):
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
-# Helper function to generate a random date between two dates
 def generate_random_date(start_date, end_date):
     time_between_dates = end_date - start_date
     days_between_dates = time_between_dates.days
     random_number_of_days = random.randrange(days_between_dates)
     return start_date + datetime.timedelta(days=random_number_of_days)
 
-# Generate user data
 def generate_user_id(length=22):
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
@@ -102,108 +98,5 @@ def generate_base_user_data():
         "user_created_at": generate_random_date(datetime.datetime(2020, 1, 1), datetime.datetime.now()).isoformat() + "Z"
     }
 
-def generate_cerebras_content(meeting_id, meeting_topic, meeting_duration):
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {CEREBRAS_API_KEY}"
-    }
-
-    # Generate VTT content
-    vtt_prompt = f"Generate a VTT (WebVTT) transcript for a {meeting_duration}-minute meeting about '{meeting_topic}'. Include timestamps and speaker names from the following list: {', '.join(random.sample(first_names, 5))}."
-    vtt_payload = {
-        "model": "llama3.1-70b",
-        "stream": False,
-        "messages": [{"content": vtt_prompt, "role": "user"}],
-        "temperature": 0.7,
-        "max_tokens": -1,
-        "seed": random.randint(0, 1000000),
-        "top_p": 1
-    }
-
-    try:
-        vtt_response = requests.post(CEREBRAS_API_URL, headers=headers, data=json.dumps(vtt_payload))
-        vtt_response.raise_for_status()
-        vtt_content = vtt_response.json()['choices'][0]['message']['content']
-    except requests.RequestException as e:
-        print(f"Error generating VTT content: {e}")
-        vtt_content = f"Error generating VTT for meeting {meeting_id}"
-
-    # Generate meeting summary
-    summary_prompt = f"Generate a summary for a meeting with the topic '{meeting_topic}' that lasted {meeting_duration} minutes. Include an overview and next steps. Base this summary on the following VTT content:\n\n{vtt_content}"
-    summary_payload = {
-        "model": "llama3.1-8b",
-        "stream": False,
-        "messages": [{"content": summary_prompt, "role": "user"}],
-        "temperature": 0.7,
-        "max_tokens": -1,
-        "seed": random.randint(0, 1000000),
-        "top_p": 1
-    }
-
-    try:
-        summary_response = requests.post(CEREBRAS_API_URL, headers=headers, data=json.dumps(summary_payload))
-        summary_response.raise_for_status()
-        summary_content = summary_response.json()['choices'][0]['message']['content']
-    except requests.RequestException as e:
-        print(f"Error generating summary content: {e}")
-        summary_content = f"Error generating summary for meeting {meeting_id}"
-
-    return vtt_content, summary_content
-
-def store_generated_content(meeting_id, meeting_topic, vtt_content, summary_content):
-    # Store VTT content
-    with open(os.path.join(VTT_FILES_DIR, f"{meeting_id}.vtt"), "w") as vtt_file:
-        vtt_file.write(vtt_content)
-    
-    # Store summary content
-    with open(os.path.join(SUMMARIES_DIR, f"{meeting_id}.json"), "w") as summary_file:
-        json.dump({"meeting_topic": meeting_topic, "summary": summary_content}, summary_file)
-    
-    # Add to pre-generated content list
-    _pre_generated_content.append({
-        "meeting_id": meeting_id,
-        "meeting_topic": meeting_topic,
-        "vtt_content": vtt_content,
-        "summary_content": summary_content
-    })
-
-    # Add to content queue
-    content_queue.put({
-        "meeting_id": meeting_id,
-        "meeting_topic": meeting_topic,
-        "vtt_content": vtt_content,
-        "summary_content": summary_content
-    })
-
-def fetch_stored_vtt(meeting_id):
-    vtt_file_path = os.path.join(VTT_FILES_DIR, f"{meeting_id}.vtt")
-    if os.path.exists(vtt_file_path):
-        with open(vtt_file_path, "r") as vtt_file:
-            return vtt_file.read()
-    return None
-
-def fetch_stored_summary(meeting_id):
-    summary_file_path = os.path.join(SUMMARIES_DIR, f"{meeting_id}.json")
-    if os.path.exists(summary_file_path):
-        with open(summary_file_path, "r") as summary_file:
-            return json.load(summary_file)
-    return None
-
-def get_random_pre_generated_content():
-    if not _pre_generated_content:
-        return content_queue.get()  # Wait for content to be generated
-    return random.choice(_pre_generated_content)
-
-def pre_generate_content():
-    for _ in range(100):
-        meeting_id = generate_random_string(10)
-        meeting_topic = random.choice(meeting_topics)
-        meeting_duration = random.randint(30, 120)
-        
-        vtt_content, summary_content = generate_cerebras_content(meeting_id, meeting_topic, meeting_duration)
-        store_generated_content(meeting_id, meeting_topic, vtt_content, summary_content)
-        
-        time.sleep(1)  # Add a small delay to avoid overwhelming the Cerebras API
-
-# Start pre-generation in a separate thread
-threading.Thread(target=pre_generate_content, daemon=True).start()
+# Initialize the file list when the module is loaded
+initialize_file_list()

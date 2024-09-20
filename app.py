@@ -5,7 +5,7 @@ from flask_caching import Cache
 from asgiref.wsgi import WsgiToAsgi
 import uvicorn
 
-from helpers import BASE_URL, fetch_stored_vtt
+from helpers import BASE_URL, get_next_file_content
 
 # Load environment variables
 load_dotenv()
@@ -24,13 +24,34 @@ app.register_blueprint(users_bp)
 app.register_blueprint(meetings_bp)
 app.register_blueprint(recordings_bp)
 
+# Global dictionary to store VTT content for each meeting
+vtt_storage = {}
+
 # Route to handle download requests for VTT files
 @app.route('/rec/download/<path:anything>', methods=['GET'])
 def download_vtt(anything):
-    meeting_id = anything.split('/')[0]
-    vtt_content = fetch_stored_vtt(meeting_id)
+    parts = anything.split('/')
+    if len(parts) != 2 or parts[1] != 'transcript.vtt':
+        return jsonify({"error": "Invalid VTT request"}), 400
+
+    meeting_id = parts[0]
+    
+    if meeting_id not in vtt_storage:
+        # If VTT not in storage, get new file content
+        try:
+            file_content, _ = get_next_file_content()
+            vtt_data = file_content.get('vtt_data', '')
+            if vtt_data:
+                vtt_storage[meeting_id] = vtt_data
+            else:
+                return jsonify({"error": "VTT not found in file"}), 404
+        except Exception as e:
+            return jsonify({"error": f"Error fetching VTT: {str(e)}"}), 500
+
+    vtt_content = vtt_storage.get(meeting_id)
     if not vtt_content:
         return jsonify({"error": "VTT not found"}), 404
+
     return Response(vtt_content, mimetype='text/vtt')
 
 # Example API to simulate meeting data with VTT links
