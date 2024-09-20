@@ -7,3 +7,4 @@ MarkupSafe==2.1.5
 python-dotenv==1.0.1
 Werkzeug==3.0.4
 uvicorn==0.23.1
+flask-caching==1.11.1
