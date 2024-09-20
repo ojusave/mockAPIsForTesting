@@ -8,7 +8,7 @@ from queue import Queue
 from threading import Lock
 
 # Base URL (replace zoom.us with ngrok URL)
-BASE_URL = "https://8a2325d6f247.ngrok.app"
+BASE_URL = "https://api-endpoint-0f24e0ac73d6.herokuapp.com"
 
 FILES_DIR = 'files'
 
