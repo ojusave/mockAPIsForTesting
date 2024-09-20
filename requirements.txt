@@ -1,6 +1,6 @@
-flask
-python-dotenv
-flask-caching
-aiohttp
-asgiref
-uvicorn
+Flask==2.0.1
+   python-dotenv==0.19.0
+   Flask-Caching==1.10.1
+   asgiref==3.4.1
+   uvicorn==0.15.0
+   requests==2.26.0
