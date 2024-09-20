@@ -208,8 +208,6 @@ pydevd-pycharm==242.21829.153
 pydub==0.25.1
 Pygments==2.17.2
 PyJWT==2.9.0
-pyobjc==10.3.1
-pyobjc-core==10.3.1
 pyobjc-framework-Accessibility==10.3.1
 pyobjc-framework-Accounts==10.3.1
 pyobjc-framework-AddressBook==10.3.1
