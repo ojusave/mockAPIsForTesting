@@ -185,7 +185,6 @@ portalocker==2.10.1
 posthog==3.6.3
 prometheus_client==0.20.0
 prompt-toolkit==3.0.43
-protobuf==5.28.1
 psutil==5.9.8
 ptyprocess==0.7.0
 pure-eval==0.2.2
