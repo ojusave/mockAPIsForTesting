@@ -1,22 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException
-from typing import Optional
-from models.auth import validate_token
+from flask import Blueprint, jsonify, request
 
-router = APIRouter()
+accounts_bp = Blueprint('accounts', __name__)
 
-@router.get("/{accountId}/lock_settings")
-async def get_account_lock_settings(
-    accountId: str,
-    option: Optional[str] = None, 
-    custom_query_fields: Optional[str] = None,
-    token: str = Depends(validate_token)
-):
+@accounts_bp.route('/<accountId>/lock_settings', methods=['GET'])
+def get_account_lock_settings(accountId):
     """Get an account's locked settings.
     
     Returns locked settings for the specified account as long as a valid access token is provided.
     """
+    # Get authorization header
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "No authorization token provided"}), 401
+        
     # Return a basic response since we just need to validate the token
-    return {
+    return jsonify({
         "schedule_meeting": {
             "host_video": False,
             "participant_video": False,
@@ -33,4 +31,4 @@ async def get_account_lock_settings(
             "cloud_recording": True,
             "auto_recording": True
         }
-    } 
+    }) 

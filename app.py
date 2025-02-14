@@ -10,7 +10,7 @@ from routes.qss import qss_bp
 from routes.calendar import calendar_bp
 from routes.phone import phone_bp
 from routes.mail import mail_bp
-from routes import accounts
+from routes.accounts import accounts_bp
 
 # Load environment variables
 load_dotenv()
@@ -32,13 +32,7 @@ app.register_blueprint(qss_bp)
 app.register_blueprint(calendar_bp)
 app.register_blueprint(phone_bp, url_prefix='/v2/phone')
 app.register_blueprint(mail_bp, url_prefix='/v2/emails')
-
-# Add accounts router
-app.include_router(
-    accounts.router,
-    prefix="/accounts",
-    tags=["Accounts"]
-)
+app.register_blueprint(accounts_bp, url_prefix='/accounts')
 
 # Global dictionary to store VTT content for each meeting
 vtt_storage = {}
