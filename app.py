@@ -4,6 +4,7 @@ from flask import Flask, send_file, jsonify, Response
 from flask_caching import Cache
 from asgiref.wsgi import WsgiToAsgi
 import uvicorn
+from flask_cors import CORS
 
 from helpers import BASE_URL, get_next_file_content
 from routes.qss import qss_bp
@@ -11,12 +12,14 @@ from routes.calendar import calendar_bp
 from routes.phone import phone_bp
 from routes.mail import mail_bp
 from routes.accounts import accounts_bp
+from routes.chat import chat_bp
 
 # Load environment variables
 load_dotenv()
 
 # Flask application setup
 app = Flask(__name__)
+CORS(app)
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 # Import blueprints
@@ -33,6 +36,7 @@ app.register_blueprint(calendar_bp)
 app.register_blueprint(phone_bp, url_prefix='/v2/phone')
 app.register_blueprint(mail_bp, url_prefix='/v2/emails')
 app.register_blueprint(accounts_bp, url_prefix='/accounts')
+app.register_blueprint(chat_bp, url_prefix='/chat')
 
 # Global dictionary to store VTT content for each meeting
 vtt_storage = {}
@@ -76,6 +80,14 @@ def get_meeting_data(meeting_id):
         "download_links": download_links
     }
     return jsonify(meeting_data)
+
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({"error": {
+        "code": "404",
+        "message": "Resource not found",
+        "details": "The requested URL was not found on the server"
+    }}), 404
 
 # Wrap the Flask app with WSGI to ASGI converter
 asgi_app = WsgiToAsgi(app)

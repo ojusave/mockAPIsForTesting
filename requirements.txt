@@ -1,5 +1,7 @@
-flask
-python-dotenv
-flask-caching
-asgiref
-uvicorn
+flask==2.3.3
+werkzeug==2.3.7
+flask-cors==3.0.10
+python-dotenv>=1.0.0
+flask-caching==2.0.2
+asgiref==3.7.2
+uvicorn>=0.30.0

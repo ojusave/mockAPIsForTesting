@@ -85,10 +85,11 @@ The server will start on `http://0.0.0.0:8000`.
 
 ## API Endpoints
 
-### Authentication
-- `POST /auth/login`: User authentication ([Zoom OAuth Reference](https://developers.zoom.us/docs/internal-apps/s2s-oauth/))
-- `POST /auth/logout`: User logout
-- `GET /auth/status`: Check authentication status
+### Authentication Note
+All endpoints require a Bearer token in the Authorization header, but since this is a mock API, **any token value will work**. Simply include:
+```
+Authorization: Bearer any-token-value
+```
 
 ### Users
 - `GET /users`: Retrieve a list of users ([Zoom Users API](https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/users))
@@ -186,12 +187,12 @@ Each error response includes:
 
 ## Security Notes
 
-This is a mock API and implements basic security measures for demonstration purposes:
-- Token-based authentication
-- Request validation
-- Rate limiting
+This is a mock API that implements minimal security measures for demonstration purposes:
+- Bearer token is required but any value will work
+- No real authentication is performed
+- No rate limiting is enforced
 
-For production use, additional security measures should be implemented.
+For production use, proper security measures should be implemented.
 
 ## Contributing
 
@@ -207,3 +208,148 @@ Contributions to improve the mock API are welcome. Please follow these steps:
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Sample API Calls
+
+### Users
+```bash
+# Get User Details
+curl -X GET http://0.0.0.0:8000/users/abc123 \
+  -H "Authorization: Bearer any-token-value"
+
+# Response
+{
+    "id": "abc123",
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "john.doe@example.com",
+    "created_at": "2024-03-20T10:00:00Z",
+    "settings": {
+        "timezone": "America/New_York",
+        "language": "en-US"
+    }
+}
+```
+
+### Meetings
+```bash
+# Get User Meetings
+curl -X GET http://0.0.0.0:8000/users/abc123/meetings \
+  -H "Authorization: Bearer mock-token-123"
+
+# Response
+{
+    "page_size": 30,
+    "total_records": 2,
+    "meetings": [
+        {
+            "id": "meeting123",
+            "topic": "Weekly Team Sync",
+            "start_time": "2024-03-21T15:00:00Z",
+            "duration": 60,
+            "timezone": "America/New_York",
+            "participants": 8,
+            "recording_available": true
+        },
+        {
+            "id": "meeting456",
+            "topic": "Project Review",
+            "start_time": "2024-03-22T14:00:00Z",
+            "duration": 45,
+            "timezone": "America/New_York",
+            "participants": 5,
+            "recording_available": false
+        }
+    ]
+}
+```
+
+### Recordings
+```bash
+# Get Meeting Recording
+curl -X GET http://0.0.0.0:8000/recordings/rec789 \
+  -H "Authorization: Bearer any-token-value"
+
+# Response
+{
+    "recording_id": "rec789",
+    "meeting_id": "meeting123",
+    "topic": "Weekly Team Sync",
+    "start_time": "2024-03-21T15:00:00Z",
+    "duration": 3600,
+    "files": [
+        {
+            "id": "file123",
+            "file_type": "VTT",
+            "download_url": "/rec/download/file123.vtt",
+            "file_size": 256000
+        },
+        {
+            "id": "file456",
+            "file_type": "MP4",
+            "download_url": "/rec/download/file456.mp4",
+            "file_size": 128000000
+        }
+    ]
+}
+```
+
+### Meeting Summary
+```bash
+# Get Meeting Summary
+curl -X GET http://0.0.0.0:8000/meetings/meeting123/meeting_summary \
+  -H "Authorization: Bearer any-token-value"
+
+# Response
+{
+    "meeting_id": "meeting123",
+    "topic": "Weekly Team Sync",
+    "date": "2024-03-21",
+    "duration": "1:00:00",
+    "summary": {
+        "title": "Team Progress and Sprint Planning",
+        "overview": "Discussion of current sprint progress and planning for next sprint",
+        "key_points": [
+            "Completed user authentication module",
+            "Started work on API documentation",
+            "Identified performance bottlenecks"
+        ],
+        "action_items": [
+            {
+                "description": "Review pull request #123",
+                "assignee": "John Doe",
+                "due_date": "2024-03-23"
+            },
+            {
+                "description": "Update API documentation",
+                "assignee": "Jane Smith",
+                "due_date": "2024-03-24"
+            }
+        ]
+    },
+    "participants": [
+        {
+            "id": "abc123",
+            "name": "John Doe",
+            "email": "john.doe@example.com",
+            "duration": 3600
+        }
+    ]
+}
+```
+
+### Error Response Example
+```bash
+# Invalid Meeting ID
+curl -X GET http://0.0.0.0:8000/meetings/invalid123/meeting_summary \
+  -H "Authorization: Bearer any-token-value"
+
+# Response
+{
+    "error": {
+        "code": "404",
+        "message": "Meeting not found",
+        "details": "No meeting exists with ID: invalid123"
+    }
+}
+```
