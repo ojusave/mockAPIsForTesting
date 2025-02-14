@@ -36,11 +36,13 @@ Authorization: Bearer any-token-value
 - `GET /users/<user_id>/recordings`: Get recordings for a specific user
 - `GET /recordings/<recording_id>`: Get specific recording details
 - `GET /rec/download/<path:path>`: Download VTT transcript file
+- `DELETE /recordings/<recording_id>`: Delete a specific recording
 
 ### Calendar
 - `GET /calendar/events`: Get calendar events
 - `POST /calendar/events`: Create calendar event
 - `PUT /calendar/events/<event_id>`: Update calendar event
+- `DELETE /calendar/events/<event_id>`: Delete a calendar event
 
 ### Mail
 - `POST /mail/send`: Send email
@@ -48,6 +50,7 @@ Authorization: Bearer any-token-value
 - `GET /mailboxes/<email>/drafts`: List drafts for a mailbox
 - `GET /mailboxes/<email>/labels`: List labels for a mailbox
 - `GET /mailboxes/<email>/threads`: List threads for a mailbox
+- `DELETE /mailboxes/<email>/drafts/<draft_id>`: Delete a draft
 
 ### Chat
 - `GET /channels`: List user's chat channels
@@ -70,6 +73,8 @@ Authorization: Bearer any-token-value
 - `GET /metrics/meetings/<meeting_id>/participants/qos_summary`: Get QoS summary for meeting participants
 - `GET /metrics/webinars/<webinar_id>/participants/qos_summary`: Get QoS summary for webinar participants
 - `GET /videosdk/sessions/<session_id>/users/qos_summary`: Get QoS summary for session users
+- `GET /qss/feedback/<feedback_id>`: Get specific feedback details
+- `DELETE /qss/feedback/<feedback_id>`: Delete specific feedback
 
 ## Sample API Calls
 
