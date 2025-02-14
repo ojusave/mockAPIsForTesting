@@ -6,6 +6,11 @@ from asgiref.wsgi import WsgiToAsgi
 import uvicorn
 
 from helpers import BASE_URL, get_next_file_content
+from routes.qss import qss_bp
+from routes.calendar import calendar_bp
+from routes.phone import phone_bp
+from routes.mail import mail_bp
+from routes import accounts
 
 # Load environment variables
 load_dotenv()
@@ -23,6 +28,17 @@ from routes.recordings import recordings_bp
 app.register_blueprint(users_bp)
 app.register_blueprint(meetings_bp)
 app.register_blueprint(recordings_bp)
+app.register_blueprint(qss_bp)
+app.register_blueprint(calendar_bp)
+app.register_blueprint(phone_bp, url_prefix='/v2/phone')
+app.register_blueprint(mail_bp, url_prefix='/v2/emails')
+
+# Add accounts router
+app.include_router(
+    accounts.router,
+    prefix="/accounts",
+    tags=["Accounts"]
+)
 
 # Global dictionary to store VTT content for each meeting
 vtt_storage = {}
