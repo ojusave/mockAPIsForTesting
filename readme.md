@@ -2,222 +2,85 @@
 
 ## Overview
 
-This project implements a mock API service that simulates a meeting summarization and transcription system. It provides endpoints for user management, meeting data, recordings, transcripts, meeting summaries, calendar integration, mail services, and quality scoring. The API is designed to mimic the functionality of a real-time meeting platform, generating random but realistic data for testing and development purposes.
+This project provides mock API endpoints that simulate a meeting summarization and transcription system. The API mimics functionality similar to the [Zoom API](https://developers.zoom.us/docs/api/), generating random but realistic data for testing and development purposes.
 
-The mock endpoints are inspired by the [Zoom API](https://developers.zoom.us/docs/api/) architecture.
+Base URL: `https://zoom-test-apis.onrender.com`
 
-## Features
+## Authentication
 
-- User management and authentication
-- Meeting data retrieval and management
-- Recording information and downloads
-- Transcript (VTT) generation and download
-- Meeting summaries
-- Calendar integration
-- Mail service integration
-- Quality scoring system (QSS)
-
-## Tech Stack
-
-- Python 3.x
-- Flask (Web framework)
-- Flask-Caching (For caching)
-- ASGI (Asynchronous Server Gateway Interface)
-- Uvicorn (ASGI server)
-
-## Project Structure
-
-```
-├── app.py
-├── helpers.py
-├── models/
-│   └── auth.py
-├── routes/
-│   ├── users.py
-│   ├── meetings.py
-│   ├── recordings.py
-│   ├── calendar.py
-│   ├── mail.py
-│   └── qss.py
-├── files/
-│   └── (JSON files with meeting data)
-├── .env
-└── requirements.txt
-```
-
-## Setup and Installation
-
-1. Clone the repository:
-   ```
-   git clone <repository-url>
-   cd <project-directory>
-   ```
-
-2. Create a virtual environment:
-   ```
-   python -m venv venv
-   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
-   ```
-
-3. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-
-4. Set up environment variables:
-   Create a `.env` file in the root directory and add the following:
-   ```
-   BASE_URL=https://api-endpoint-0f24e0ac73d6.herokuapp.com
-   ```
-
-5. Prepare JSON files:
-   Place your JSON files containing meeting data in the `files/` directory.
-
-## Running the Application
-
-To start the server, run:
-
-```
-python app.py
-```
-
-The server will start on `http://0.0.0.0:8000`.
-
-## API Endpoints
-
-### Authentication Note
-All endpoints require a Bearer token in the Authorization header, but since this is a mock API, **any token value will work**. Simply include:
+All endpoints require a Bearer token in the Authorization header. Since this is a mock API, **any token value will work**. Simply include:
 ```
 Authorization: Bearer any-token-value
 ```
 
+## Available Endpoints
+
 ### Users
-- `GET /users`: Retrieve a list of users ([Zoom Users API](https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/users))
-- `GET /users/<user_id>`: Get specific user details ([Zoom User Details](https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/user))
-- `POST /users`: Create a new user ([Zoom Create User](https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/userCreate))
-- `PUT /users/<user_id>`: Update user details ([Zoom Update User](https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/userUpdate))
+- `GET /users`: Retrieve a list of users
+- `GET /users/<user_id>`: Get specific user details
+- `POST /users`: Create a new user
+- `PUT /users/<user_id>`: Update user details
+- `GET /users/<user_id>/status`: Update a user's status (activate/deactivate)
+- `GET /users/<user_id>/token`: Get a user's Zoom token or ZAK
+- `DELETE /users/<user_id>/token`: Revoke a user's SSO token
+- `POST /users/<user_id>/settings/virtual_backgrounds`: Upload virtual background files for a user
+- `DELETE /users/<user_id>/settings/virtual_backgrounds`: Delete virtual background files for a user
 
 ### Meetings
-- `GET /users/<user_id>/meetings`: Get meetings for a specific user ([Zoom List Meetings](https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/meetings))
-- `GET /meetings/<meeting_id>`: Get specific meeting details ([Zoom Meeting Details](https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/meeting))
-- `POST /meetings`: Create a new meeting ([Zoom Create Meeting](https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/meetingCreate))
-- `GET /meetings/<meeting_id>/meeting_summary`: Get summary for a specific meeting ([Zoom Meeting Summary](https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/dashboardMeetingDetails))
+- `GET /users/<user_id>/meetings`: Get meetings for a specific user
+- `GET /meetings/<meeting_id>`: Get specific meeting details
+- `POST /meetings`: Create a new meeting
+- `GET /meetings/<meeting_id>/meeting_summary`: Get summary for a specific meeting
 
 ### Recordings
-- `GET /users/<user_id>/recordings`: Get recordings for a specific user ([Zoom List Recordings](https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/recordingsList))
-- `GET /recordings/<recording_id>`: Get specific recording details ([Zoom Recording Details](https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/recordingGet))
-- `GET /rec/download/<path:path>`: Download VTT transcript file ([Zoom Get Transcript](https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/recordingRegistrantQuestionGet))
+- `GET /users/<user_id>/recordings`: Get recordings for a specific user
+- `GET /recordings/<recording_id>`: Get specific recording details
+- `GET /rec/download/<path:path>`: Download VTT transcript file
 
 ### Calendar
-- `GET /calendar/events`: Get calendar events ([Zoom Schedule Meeting](https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/meetingCreate))
+- `GET /calendar/events`: Get calendar events
 - `POST /calendar/events`: Create calendar event
 - `PUT /calendar/events/<event_id>`: Update calendar event
 
 ### Mail
-- `POST /mail/send`: Send email ([Zoom Invitation Email](https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/meetingInvitationEmail))
+- `POST /mail/send`: Send email
 - `GET /mail/inbox`: Get inbox messages
+- `GET /mailboxes/<email>/drafts`: List drafts for a mailbox
+- `GET /mailboxes/<email>/labels`: List labels for a mailbox
+- `GET /mailboxes/<email>/threads`: List threads for a mailbox
+
+### Chat
+- `GET /channels`: List user's chat channels
+- `POST /channels`: Create a new chat channel
+- `GET /channels/<channel_id>/messages`: Get messages for a channel
+- `POST /channels/<channel_id>/messages`: Send a message to a channel
+- `GET /channels/<channel_id>/members`: List members in a channel
+- `POST /channels/<channel_id>/members`: Add members to a channel
+- `GET /channels/<channel_id>`: Get a specific channel
+- `PATCH /channels/<channel_id>`: Update a channel's settings
+- `DELETE /channels/<channel_id>`: Delete a channel
+
+### Phone
+- `GET /account_settings`: Get account settings for phone
+- `GET /outbound_caller_id/customized_numbers`: Get customized phone numbers
 
 ### Quality Scoring (QSS)
-- `GET /qss/score/<meeting_id>`: Get quality score for a meeting ([Zoom QoS Details](https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/qosParticipants))
+- `GET /qss/score/<meeting_id>`: Get quality score for a meeting
 - `POST /qss/feedback`: Submit quality feedback
-
-## Response Format Examples
-
-### Meeting Summary Response
-```json
-{
-    "meeting_id": "123",
-    "summary": {
-        "title": "Project Planning Meeting",
-        "overview": "Discussion of Q2 objectives",
-        "key_points": [...],
-        "action_items": [...]
-    }
-}
-```
-
-### Recording Response
-```json
-{
-    "recording_id": "456",
-    "meeting_id": "123",
-    "duration": "1:30:00",
-    "download_url": "/rec/download/456.vtt",
-    "created_at": "2024-03-20T10:00:00Z"
-}
-```
-
-## Data Generation
-
-The API generates random but realistic data for all endpoints. This includes:
-
-- User profiles and authentication data
-- Meeting details and summaries
-- Recording information
-- Transcripts (VTT files)
-- Calendar events
-- Mail messages
-- Quality scores
-
-Data is generated on-the-fly and is not persistent between requests.
-
-## Caching
-
-The application uses Flask-Caching to improve performance. The cache is configured as a simple in-memory store with the following features:
-- Cache timeout: 300 seconds
-- Maximum items: 100
-- Cache key prefix: 'mock_api'
-
-## Error Handling
-
-The API includes comprehensive error handling for:
-
-- Authentication failures
-- Missing or invalid tokens
-- Invalid request parameters
-- Resource not found errors
-- Rate limiting
-- Server errors
-
-Each error response includes:
-- HTTP status code
-- Error message
-- Error code
-- Additional details when applicable
-
-## Security Notes
-
-This is a mock API that implements minimal security measures for demonstration purposes:
-- Bearer token is required but any value will work
-- No real authentication is performed
-- No rate limiting is enforced
-
-For production use, proper security measures should be implemented.
-
-## Contributing
-
-Contributions to improve the mock API are welcome. Please follow these steps:
-
-1. Fork the repository
-2. Create a new branch (`git checkout -b feature/your-feature-name`)
-3. Make your changes
-4. Commit your changes (`git commit -am 'Add some feature'`)
-5. Push to the branch (`git push origin feature/your-feature-name`)
-6. Create a new Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+- `GET /metrics/meetings/<meeting_id>/participants/qos_summary`: Get QoS summary for meeting participants
+- `GET /metrics/webinars/<webinar_id>/participants/qos_summary`: Get QoS summary for webinar participants
+- `GET /videosdk/sessions/<session_id>/users/qos_summary`: Get QoS summary for session users
 
 ## Sample API Calls
 
-### Users
+### Get User Details
 ```bash
-# Get User Details
-curl -X GET http://0.0.0.0:8000/users/abc123 \
+curl -X GET https://zoom-test-apis.onrender.com/users/abc123 \
   -H "Authorization: Bearer any-token-value"
+```
 
-# Response
+Response:
+```json
 {
     "id": "abc123",
     "first_name": "John",
@@ -231,13 +94,14 @@ curl -X GET http://0.0.0.0:8000/users/abc123 \
 }
 ```
 
-### Meetings
+### Get User Meetings
 ```bash
-# Get User Meetings
-curl -X GET http://0.0.0.0:8000/users/abc123/meetings \
+curl -X GET https://zoom-test-apis.onrender.com/users/abc123/meetings \
   -H "Authorization: Bearer mock-token-123"
+```
 
-# Response
+Response:
+```json
 {
     "page_size": 30,
     "total_records": 2,
@@ -264,43 +128,14 @@ curl -X GET http://0.0.0.0:8000/users/abc123/meetings \
 }
 ```
 
-### Recordings
+### Get Meeting Summary
 ```bash
-# Get Meeting Recording
-curl -X GET http://0.0.0.0:8000/recordings/rec789 \
+curl -X GET https://zoom-test-apis.onrender.com/meetings/meeting123/meeting_summary \
   -H "Authorization: Bearer any-token-value"
-
-# Response
-{
-    "recording_id": "rec789",
-    "meeting_id": "meeting123",
-    "topic": "Weekly Team Sync",
-    "start_time": "2024-03-21T15:00:00Z",
-    "duration": 3600,
-    "files": [
-        {
-            "id": "file123",
-            "file_type": "VTT",
-            "download_url": "/rec/download/file123.vtt",
-            "file_size": 256000
-        },
-        {
-            "id": "file456",
-            "file_type": "MP4",
-            "download_url": "/rec/download/file456.mp4",
-            "file_size": 128000000
-        }
-    ]
-}
 ```
 
-### Meeting Summary
-```bash
-# Get Meeting Summary
-curl -X GET http://0.0.0.0:8000/meetings/meeting123/meeting_summary \
-  -H "Authorization: Bearer any-token-value"
-
-# Response
+Response:
+```json
 {
     "meeting_id": "meeting123",
     "topic": "Weekly Team Sync",
@@ -340,11 +175,12 @@ curl -X GET http://0.0.0.0:8000/meetings/meeting123/meeting_summary \
 
 ### Error Response Example
 ```bash
-# Invalid Meeting ID
-curl -X GET http://0.0.0.0:8000/meetings/invalid123/meeting_summary \
+curl -X GET https://zoom-test-apis.onrender.com/meetings/invalid123/meeting_summary \
   -H "Authorization: Bearer any-token-value"
+```
 
-# Response
+Response:
+```json
 {
     "error": {
         "code": "404",
@@ -353,3 +189,12 @@ curl -X GET http://0.0.0.0:8000/meetings/invalid123/meeting_summary \
     }
 }
 ```
+
+## Notes
+
+- This is a mock API that generates random but realistic data
+- Data is not persistent between requests
+- Any Bearer token value will be accepted
+- No rate limiting is enforced
+
+For questions or issues, please open a GitHub issue.
