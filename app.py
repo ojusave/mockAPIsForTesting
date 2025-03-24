@@ -13,6 +13,7 @@ from routes.phone import phone_bp
 from routes.mail import mail_bp
 from routes.accounts import accounts_bp
 from routes.chat import chat_bp
+from routes.chatbot import chatbot_bp
 
 # Load environment variables
 load_dotenv()
@@ -37,6 +38,7 @@ app.register_blueprint(phone_bp, url_prefix='/v2/phone')
 app.register_blueprint(mail_bp, url_prefix='/emails')
 app.register_blueprint(accounts_bp, url_prefix='/accounts')
 app.register_blueprint(chat_bp, url_prefix='/chat')
+app.register_blueprint(chatbot_bp)
 
 # Global dictionary to store VTT content for each meeting
 vtt_storage = {}
