@@ -34,7 +34,7 @@ app.register_blueprint(recordings_bp)
 app.register_blueprint(qss_bp)
 app.register_blueprint(calendar_bp)
 app.register_blueprint(phone_bp, url_prefix='/v2/phone')
-app.register_blueprint(mail_bp, url_prefix='/v2/emails')
+app.register_blueprint(mail_bp, url_prefix='/emails')
 app.register_blueprint(accounts_bp, url_prefix='/accounts')
 app.register_blueprint(chat_bp, url_prefix='/chat')
 
