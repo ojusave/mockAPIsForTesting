@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 import time
 from helpers import generate_random_string
 
-chatbot_bp = Blueprint('chatbot', __name__, url_prefix='/v2/im/chat')
+chatbot_bp = Blueprint('chatbot', __name__, url_prefix='/im/chat')
 
 @chatbot_bp.route('/messages', methods=['POST'])
 def send_chat_message():
