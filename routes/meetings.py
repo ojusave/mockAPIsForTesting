@@ -137,3 +137,96 @@ def download_vtt(path):
 
     except Exception as e:
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
+@meetings_bp.route('/users/<user_id>/meetings/<meeting_id>', methods=['GET'])
+def get_meeting(user_id, meeting_id):
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({"error": "No token provided"}), 401
+
+    try:
+        file_content = get_random_file_content()
+        summary = file_content.get('summary', {})
+        
+        current_time = datetime.datetime.now()
+        duration = random.randint(30, 120)
+        
+        meeting_data = {
+            "uuid": meeting_id,
+            "id": meeting_id,
+            "host_id": user_id,
+            "host_email": f"{generate_random_string(6)}@example.com",
+            "topic": summary.get('summary_title', f"Meeting about {generate_random_string(5)}"),
+            "type": 2,
+            "start_time": current_time.isoformat() + "Z",
+            "duration": duration,
+            "timezone": random.choice(["America/Los_Angeles", "America/New_York", "Asia/Tokyo", "Europe/London"]),
+            "created_at": (current_time - datetime.timedelta(days=1)).isoformat() + "Z",
+            "join_url": f"{BASE_URL}/j/{meeting_id}",
+            "start_url": f"{BASE_URL}/s/{meeting_id}",
+            "password": generate_random_string(6),
+            "settings": {
+                "host_video": True,
+                "participant_video": False,
+                "join_before_host": False,
+                "mute_upon_entry": True,
+                "waiting_room": True,
+                "meeting_authentication": False
+            }
+        }
+
+        return jsonify(meeting_data)
+
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
+@meetings_bp.route('/past_meetings/<meeting_id>/participants', methods=['GET'])
+def get_past_meeting_participants(meeting_id):
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({"error": "No token provided"}), 401
+
+    try:
+        # Get pagination parameters from query string
+        page_size = min(int(request.args.get('page_size', 30)), 300)  # Max 300 per API spec
+        next_page_token = request.args.get('next_page_token', '')
+
+        # Generate random number of participants (1-10 for testing)
+        num_participants = random.randint(1, 10)
+        
+        # Generate mock participants data
+        participants = []
+        current_time = datetime.datetime.now()
+        
+        for _ in range(num_participants):
+            join_time = current_time - datetime.timedelta(minutes=random.randint(30, 120))
+            leave_time = join_time + datetime.timedelta(minutes=random.randint(5, 60))
+            duration = int((leave_time - join_time).total_seconds())
+            
+            participant = {
+                "id": generate_random_string(22),
+                "name": f"User {generate_random_string(5)}",
+                "user_id": str(random.randint(10000000, 99999999)),
+                "registrant_id": generate_random_string(22),
+                "user_email": f"{generate_random_string(6)}@example.com",
+                "join_time": join_time.isoformat() + "Z",
+                "leave_time": leave_time.isoformat() + "Z",
+                "duration": duration,
+                "failover": False,
+                "status": random.choice(["in_meeting", "in_waiting_room"]),
+                "internal_user": random.choice([True, False])
+            }
+            participants.append(participant)
+
+        response_data = {
+            "next_page_token": generate_random_string(32) if num_participants >= page_size else "",
+            "page_count": 1,
+            "page_size": page_size,
+            "total_records": num_participants,
+            "participants": participants
+        }
+
+        return jsonify(response_data)
+
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
