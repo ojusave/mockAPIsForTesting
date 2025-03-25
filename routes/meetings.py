@@ -5,6 +5,7 @@ import uuid
 import random
 import os
 import json
+from cache_config import cache
 
 meetings_bp = Blueprint('meetings', __name__)
 
@@ -45,6 +46,7 @@ def generate_meeting_data(user_id, from_date, to_date):
     return meetings
 
 @meetings_bp.route('/users/<user_id>/meetings', methods=['GET'])
+@cache.memoize(timeout=3600)
 def get_meetings(user_id):
     token = request.headers.get('Authorization')
     if not token:
@@ -71,6 +73,7 @@ def get_meetings(user_id):
     return jsonify(response_data)
 
 @meetings_bp.route('/meetings/<meeting_id>/meeting_summary', methods=['GET'])
+@cache.memoize(timeout=3600)
 def get_meeting_summary(meeting_id):
     token = request.headers.get('Authorization')
     if not token:
@@ -139,6 +142,7 @@ def download_vtt(path):
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 @meetings_bp.route('/users/<user_id>/meetings/<meeting_id>', methods=['GET'])
+@cache.memoize(timeout=3600)  # Cache for 1 hour
 def get_meeting(user_id, meeting_id):
     token = request.headers.get('Authorization')
     if not token:
@@ -230,3 +234,15 @@ def get_past_meeting_participants(meeting_id):
 
     except Exception as e:
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
+@meetings_bp.route('/users/<user_id>/meetings/<meeting_id>', methods=['PATCH'])
+def update_meeting(user_id, meeting_id):
+    # After updating meeting
+    cache.delete_memoized(get_meeting, user_id, meeting_id)
+    # ... rest of the code
+
+@meetings_bp.route('/users/<user_id>/meetings/<meeting_id>', methods=['DELETE'])
+def delete_meeting(user_id, meeting_id):
+    # Before deleting meeting
+    cache.delete_memoized(get_meeting, user_id, meeting_id)
+    # ... rest of the code

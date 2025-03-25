@@ -100,3 +100,9 @@ def generate_base_user_data():
 
 # Initialize the file list when the module is loaded
 initialize_file_list()
+
+def generate_cache_key(*args, **kwargs):
+    """Generate a cache key from the arguments"""
+    key_parts = [str(arg) for arg in args]
+    key_parts.extend(f"{k}:{v}" for k, v in sorted(kwargs.items()))
+    return ":".join(key_parts)

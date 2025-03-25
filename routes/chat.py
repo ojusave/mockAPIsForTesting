@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from functools import wraps
 import time
+from cache_config import cache
 
 chat_bp = Blueprint('chat', __name__)
 
@@ -207,6 +208,7 @@ def leave_channel(channel_id):
 
 @chat_bp.route('/chat/users/<user_id>/messages', methods=['GET'])
 @require_auth
+@cache.memoize(timeout=3600)
 def list_user_messages(user_id):
     """List messages for a specific user"""
     # In production, fetch from database/Zoom API
@@ -237,14 +239,22 @@ def send_user_message(user_id):
         "timestamp": int(time.time() * 1000)
     }
     
-    # In production, save to database/send via Zoom API
     if 'direct_messages' not in messages:
         messages['direct_messages'] = []
     messages['direct_messages'].append(message)
     
+    # Cache the message
+    cache_key = f'message:{message["id"]}'
+    cache.set(cache_key, message, timeout=3600)
+    
+    # Invalidate the user's message list cache
+    cache.delete_memoized(list_user_messages, user_id)
+    
     return jsonify(message), 201
 
 @chat_bp.route('/chat/users/<user_id>/messages/<message_id>', methods=['GET'])
+@chat_bp.route('/chat/users/<user_id>/messages/<message_id>', methods=['PUT', 'PATCH'])
+@chat_bp.route('/chat/users/<user_id>/messages/<message_id>', methods=['DELETE'])
 @require_auth
 def get_user_message(user_id, message_id):
     """Get a specific message"""
@@ -258,35 +268,6 @@ def get_user_message(user_id, message_id):
                 return jsonify(msg)
     
     return jsonify({"error": "Message not found"}), 404
-
-@chat_bp.route('/chat/users/<user_id>/messages/<message_id>', methods=['PUT', 'PATCH'])
-@require_auth
-def update_user_message(user_id, message_id):
-    """Update a message"""
-    data = request.get_json()
-    
-    # Search and update message
-    for channel_msgs in messages.values():
-        for msg in channel_msgs:
-            if msg['id'] == message_id and msg['sender'] == user_id:
-                msg['message'] = data.get('message', msg['message'])
-                msg['updated_at'] = int(time.time() * 1000)
-                return '', 204
-    
-    return jsonify({"error": "Message not found or unauthorized"}), 404
-
-@chat_bp.route('/chat/users/<user_id>/messages/<message_id>', methods=['DELETE'])
-@require_auth
-def delete_user_message(user_id, message_id):
-    """Delete a message"""
-    # Search and delete message
-    for channel_id, channel_msgs in messages.items():
-        for i, msg in enumerate(channel_msgs):
-            if msg['id'] == message_id and msg['sender'] == user_id:
-                messages[channel_id].pop(i)
-                return '', 204
-    
-    return jsonify({"error": "Message not found or unauthorized"}), 404
 
 @chat_bp.route('/chat/users/me/messages', methods=['GET'])
 @require_auth

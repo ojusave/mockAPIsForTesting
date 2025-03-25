@@ -1,10 +1,10 @@
 import os
 from dotenv import load_dotenv
 from flask import Flask, send_file, jsonify, Response
-from flask_caching import Cache
-from asgiref.wsgi import WsgiToAsgi
-import uvicorn
 from flask_cors import CORS
+import uvicorn
+from asgiref.wsgi import WsgiToAsgi
+from cache_config import cache  # Import cache
 
 from helpers import BASE_URL, get_next_file_content
 from routes.qss import qss_bp
@@ -21,7 +21,9 @@ load_dotenv()
 # Flask application setup
 app = Flask(__name__)
 CORS(app)
-cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+
+# Initialize cache with app
+cache.init_app(app)
 
 # Import blueprints
 from routes.users import users_bp
@@ -82,6 +84,24 @@ def get_meeting_data(meeting_id):
         "download_links": download_links
     }
     return jsonify(meeting_data)
+
+@app.route('/cache/clear', methods=['POST'])
+def clear_cache():
+    """Clear all cache (admin only endpoint)"""
+    try:
+        cache.clear()
+        return jsonify({"message": "Cache cleared successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to clear cache: {str(e)}"}), 500
+
+@app.route('/cache/clear/<key>', methods=['POST'])
+def clear_cache_key(key):
+    """Clear specific cache key (admin only endpoint)"""
+    try:
+        cache.delete(key)
+        return jsonify({"message": f"Cache key {key} cleared successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to clear cache key: {str(e)}"}), 500
 
 @app.errorhandler(404)
 def not_found(e):

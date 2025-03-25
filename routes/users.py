@@ -1,13 +1,15 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from helpers import generate_base_user_data
 import random
 import os
 from datetime import datetime, timedelta
 from models.auth import require_auth
+from cache_config import cache
 
 users_bp = Blueprint('users', __name__)
 
 @users_bp.route('/users', methods=['GET'])
+@cache.cached(timeout=3600, key_prefix='list_users')
 def get_data():
     token = request.headers.get('Authorization')
     if not token:
@@ -31,6 +33,7 @@ def get_data():
     return jsonify(response_data)
 
 @users_bp.route('/users/<user_id>', methods=['GET'])
+@cache.memoize(timeout=3600)
 @require_auth
 def get_user(user_id):
     """Get detailed user information"""
@@ -177,3 +180,10 @@ def delete_virtual_backgrounds(user_id):
         
     # Mock response - return 204 for successful deletion
     return '', 204
+
+@users_bp.route('/users/<user_id>', methods=['PATCH'])
+def update_user(user_id):
+    # After updating user
+    cache.delete_memoized(get_user, user_id)
+    cache.delete('list_users')
+    # ... rest of the code
