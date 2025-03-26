@@ -6,6 +6,7 @@ import random
 import os
 import json
 from cache_config import cache
+from functools import wraps
 
 meetings_bp = Blueprint('meetings', __name__)
 
@@ -72,6 +73,72 @@ def get_meetings(user_id):
 
     return jsonify(response_data)
 
+def get_cached_meeting_base_data(meeting_id):
+    """Get or create consistent base meeting data for a meeting ID"""
+    cache_key = f'meeting_base_data_{meeting_id}'
+    
+    # Try to get from cache first
+    base_data = cache.get(cache_key)
+    if base_data is not None:
+        return base_data
+        
+    # If not in cache, generate new data
+    file_content = get_random_file_content()
+    summary = file_content.get('summary', {})
+    
+    base_data = {
+        'topic': summary.get('summary_title', f"Meeting about {generate_random_string(5)}"),
+        'summary': summary,
+        'file_content': file_content
+    }
+    
+    # Cache for 1 hour
+    cache.set(cache_key, base_data, timeout=3600)
+    return base_data
+
+@meetings_bp.route('/users/<user_id>/meetings/<meeting_id>', methods=['GET'])
+@cache.memoize(timeout=3600)
+def get_meeting(user_id, meeting_id):
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({"error": "No token provided"}), 401
+
+    try:
+        # Get consistent base data
+        base_data = get_cached_meeting_base_data(meeting_id)
+        
+        current_time = datetime.datetime.now()
+        duration = random.randint(30, 120)
+        
+        meeting_data = {
+            "uuid": meeting_id,
+            "id": meeting_id,
+            "host_id": user_id,
+            "host_email": f"{generate_random_string(6)}@example.com",
+            "topic": base_data['topic'],  # Use consistent topic
+            "type": 2,
+            "start_time": current_time.isoformat() + "Z",
+            "duration": duration,
+            "timezone": random.choice(["America/Los_Angeles", "America/New_York", "Asia/Tokyo", "Europe/London"]),
+            "created_at": (current_time - datetime.timedelta(days=1)).isoformat() + "Z",
+            "join_url": f"{BASE_URL}/j/{meeting_id}",
+            "start_url": f"{BASE_URL}/s/{meeting_id}",
+            "password": generate_random_string(6),
+            "settings": {
+                "host_video": True,
+                "participant_video": False,
+                "join_before_host": False,
+                "mute_upon_entry": True,
+                "waiting_room": True,
+                "meeting_authentication": False
+            }
+        }
+
+        return jsonify(meeting_data)
+
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
 @meetings_bp.route('/meetings/<meeting_id>/meeting_summary', methods=['GET'])
 @cache.memoize(timeout=3600)
 def get_meeting_summary(meeting_id):
@@ -80,29 +147,30 @@ def get_meeting_summary(meeting_id):
         return jsonify({"error": "No token provided"}), 401
 
     try:
-        file_content = get_random_file_content()
-        summary = file_content.get('summary', {})
+        # Get consistent base data
+        base_data = get_cached_meeting_base_data(meeting_id)
+        summary = base_data['summary']
         
         if not summary:
             return jsonify({"error": "Summary not found"}), 404
 
-        meeting_duration = random.randint(30, 120)  # Random duration between 30 and 120 minutes
+        meeting_duration = random.randint(30, 120)
         current_time = datetime.datetime.now()
         start_time = current_time - datetime.timedelta(minutes=meeting_duration)
         
         meeting_summary = {
             "meeting_host_id": str(uuid.uuid4()),
             "meeting_host_email": f"{generate_random_string(6)}@example.com",
-            "meeting_uuid": generate_random_string(22),
+            "meeting_uuid": meeting_id,  # Use consistent meeting ID
             "meeting_id": meeting_id,
-            "meeting_topic": summary.get('summary_title', 'Untitled Meeting'),
+            "meeting_topic": base_data['topic'],  # Use consistent topic
             "meeting_start_time": start_time.isoformat() + "Z",
             "meeting_end_time": current_time.isoformat() + "Z",
             "summary_start_time": current_time.isoformat() + "Z",
             "summary_end_time": (current_time + datetime.timedelta(minutes=5)).isoformat() + "Z",
             "summary_created_time": current_time.isoformat() + "Z",
             "summary_last_modified_time": current_time.isoformat() + "Z",
-            "summary_title": summary.get('summary_title', 'Meeting Summary'),
+            "summary_title": base_data['topic'],  # Use consistent topic
             "summary_overview": summary.get('summary_overview', ''),
             "summary_details": [
                 {
@@ -137,49 +205,6 @@ def download_vtt(path):
             return jsonify({"error": "VTT data not found"}), 404
 
         return vtt_data, 200, {'Content-Type': 'text/vtt'}
-
-    except Exception as e:
-        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
-
-@meetings_bp.route('/users/<user_id>/meetings/<meeting_id>', methods=['GET'])
-@cache.memoize(timeout=3600)  # Cache for 1 hour
-def get_meeting(user_id, meeting_id):
-    token = request.headers.get('Authorization')
-    if not token:
-        return jsonify({"error": "No token provided"}), 401
-
-    try:
-        file_content = get_random_file_content()
-        summary = file_content.get('summary', {})
-        
-        current_time = datetime.datetime.now()
-        duration = random.randint(30, 120)
-        
-        meeting_data = {
-            "uuid": meeting_id,
-            "id": meeting_id,
-            "host_id": user_id,
-            "host_email": f"{generate_random_string(6)}@example.com",
-            "topic": summary.get('summary_title', f"Meeting about {generate_random_string(5)}"),
-            "type": 2,
-            "start_time": current_time.isoformat() + "Z",
-            "duration": duration,
-            "timezone": random.choice(["America/Los_Angeles", "America/New_York", "Asia/Tokyo", "Europe/London"]),
-            "created_at": (current_time - datetime.timedelta(days=1)).isoformat() + "Z",
-            "join_url": f"{BASE_URL}/j/{meeting_id}",
-            "start_url": f"{BASE_URL}/s/{meeting_id}",
-            "password": generate_random_string(6),
-            "settings": {
-                "host_video": True,
-                "participant_video": False,
-                "join_before_host": False,
-                "mute_upon_entry": True,
-                "waiting_room": True,
-                "meeting_authentication": False
-            }
-        }
-
-        return jsonify(meeting_data)
 
     except Exception as e:
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
@@ -243,6 +268,7 @@ def update_meeting(user_id, meeting_id):
 
 @meetings_bp.route('/users/<user_id>/meetings/<meeting_id>', methods=['DELETE'])
 def delete_meeting(user_id, meeting_id):
-    # Before deleting meeting
     cache.delete_memoized(get_meeting, user_id, meeting_id)
-    # ... rest of the code
+    cache.delete_memoized(get_meeting_summary, meeting_id)
+    cache.delete(f'meeting_base_data_{meeting_id}')
+    return '', 204
