@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request, Response
 from helpers import BASE_URL, get_next_file_content, generate_random_string, generate_random_date
+from models.auth import require_auth
 import random
 import datetime
 import uuid
@@ -111,6 +112,7 @@ def get_user_recordings(user_id):
         return jsonify({"error": "An internal server error occurred"}), 500
 
 @recordings_bp.route('/rec/download/<path:path>', methods=['GET'])
+@require_auth
 def download_vtt(path):
     logger.info(f"Attempting to download VTT file: {path}")
     

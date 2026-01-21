@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from models.auth import require_auth
 import time
 
 mail_bp = Blueprint('mail', __name__, url_prefix='/emails')
@@ -55,22 +56,23 @@ MOCK_THREADS = {
 }
 
 @mail_bp.route('/mailboxes/<email>/drafts', methods=['GET'])
+@require_auth
 def list_drafts(email):
     return jsonify(MOCK_DRAFTS)
 
 @mail_bp.route('/mailboxes/<email>/labels', methods=['GET'])
+@require_auth
 def list_labels(email):
     return jsonify(MOCK_LABELS)
 
 @mail_bp.route('/mailboxes/<email>/threads', methods=['GET'])
+@require_auth
 def list_threads(email):
     return jsonify(MOCK_THREADS)
 
 @mail_bp.route('/mailboxes/<email>/messages/send', methods=['POST'])
+@require_auth
 def send_email(email):
-    token = request.headers.get('Authorization')
-    if not token:
-        return jsonify({"error": "No token provided"}), 401
 
     try:
         data = request.get_json()

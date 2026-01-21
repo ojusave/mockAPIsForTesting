@@ -180,6 +180,7 @@ def delete_virtual_backgrounds(user_id):
     return '', 204
 
 @users_bp.route('/users/<user_id>', methods=['PATCH'])
+@require_auth
 def update_user(user_id):
     # After updating user
     cache.delete_memoized(get_user, user_id)

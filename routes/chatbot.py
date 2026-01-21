@@ -1,14 +1,13 @@
 from flask import Blueprint, jsonify, request
+from models.auth import require_auth
 import time
 from helpers import generate_random_string
 
 chatbot_bp = Blueprint('chatbot', __name__, url_prefix='/im/chat')
 
 @chatbot_bp.route('/messages', methods=['POST'])
+@require_auth
 def send_chat_message():
-    token = request.headers.get('Authorization')
-    if not token:
-        return jsonify({"error": "No token provided"}), 401
 
     try:
         data = request.get_json()

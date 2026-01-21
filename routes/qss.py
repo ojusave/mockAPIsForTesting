@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from helpers import generate_random_string, get_next_file_content
+from models.auth import require_auth
 import datetime
 import random
 
@@ -45,10 +46,8 @@ def generate_qos_data():
     ]
 
 @qss_bp.route('/metrics/meetings/<meeting_id>/participants/qos_summary', methods=['GET'])
+@require_auth
 def get_meeting_participants_qos(meeting_id):
-    token = request.headers.get('Authorization')
-    if not token:
-        return jsonify({"error": "No token provided"}), 401
 
     page_size = int(request.args.get('page_size', 1))
     next_page_token = request.args.get('next_page_token', '')
@@ -75,10 +74,8 @@ def get_meeting_participants_qos(meeting_id):
     return jsonify(response)
 
 @qss_bp.route('/metrics/webinars/<webinar_id>/participants/qos_summary', methods=['GET'])
+@require_auth
 def get_webinar_participants_qos(webinar_id):
-    token = request.headers.get('Authorization')
-    if not token:
-        return jsonify({"error": "No token provided"}), 401
 
     page_size = int(request.args.get('page_size', 1))
     next_page_token = request.args.get('next_page_token', '')
@@ -105,10 +102,8 @@ def get_webinar_participants_qos(webinar_id):
     return jsonify(response)
 
 @qss_bp.route('/videosdk/sessions/<session_id>/users/qos_summary', methods=['GET'])
+@require_auth
 def get_session_users_qos(session_id):
-    token = request.headers.get('Authorization')
-    if not token:
-        return jsonify({"error": "No token provided"}), 401
 
     page_size = int(request.args.get('page_size', 1))
     next_page_token = request.args.get('next_page_token', '')

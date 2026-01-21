@@ -1,17 +1,15 @@
 from flask import Blueprint, jsonify, request
+from models.auth import require_auth
 
 accounts_bp = Blueprint('accounts', __name__)
 
 @accounts_bp.route('/<accountId>/lock_settings', methods=['GET'])
+@require_auth
 def get_account_lock_settings(accountId):
     """Get an account's locked settings.
     
     Returns locked settings for the specified account as long as a valid access token is provided.
     """
-    # Get authorization header
-    auth_header = request.headers.get('Authorization')
-    if not auth_header:
-        return jsonify({"error": "No authorization token provided"}), 401
         
     # Return a basic response since we just need to validate the token
     return jsonify({

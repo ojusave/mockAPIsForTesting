@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from helpers import generate_random_string
+from models.auth import require_auth
 import datetime
 import random
 
@@ -30,11 +31,9 @@ def generate_calendar_entry():
     }
 
 @calendar_bp.route('/calendars/<cal_id>/acl', methods=['GET'])
+@require_auth
 def get_calendar_acl(cal_id):
     """List ACL rules of specified calendar"""
-    token = request.headers.get('Authorization')
-    if not token:
-        return jsonify({"error": "No token provided"}), 401
 
     max_results = int(request.args.get('maxResults', 250))
     show_deleted = request.args.get('showDeleted', 'false').lower() == 'true'
@@ -64,11 +63,9 @@ def get_calendar_acl(cal_id):
     return jsonify(response)
 
 @calendar_bp.route('/calendars/<cal_id>/acl', methods=['POST'])
+@require_auth
 def create_acl_rule(cal_id):
     """Create a new ACL rule"""
-    token = request.headers.get('Authorization')
-    if not token:
-        return jsonify({"error": "No token provided"}), 401
 
     data = request.get_json()
     if not data or 'scope' not in data or 'role' not in data:
@@ -84,12 +81,14 @@ def create_acl_rule(cal_id):
     return jsonify(acl_rule), 200
 
 @calendar_bp.route('/calendars/<cal_id>/acl/<acl_id>', methods=['DELETE'])
+@require_auth
 def delete_acl_rule(cal_id, acl_id):
     """Delete an existing ACL rule"""
     # Logic to delete the ACL rule
     return '', 204
 
 @calendar_bp.route('/calendars/<cal_id>/acl/<acl_id>', methods=['GET'])
+@require_auth
 def get_acl_rule(cal_id, acl_id):
     """Get the specified ACL rule"""
     acl_rule = {
@@ -105,6 +104,7 @@ def get_acl_rule(cal_id, acl_id):
     return jsonify(acl_rule), 200
 
 @calendar_bp.route('/calendars/<cal_id>/acl', methods=['GET'])
+@require_auth
 def list_acl_rules(cal_id):
     """List ACL rules of specified calendar"""
     acl_rules = []
@@ -122,6 +122,7 @@ def list_acl_rules(cal_id):
     return jsonify({"kind": "calendar#acl", "items": acl_rules}), 200
 
 @calendar_bp.route('/calendars/users/<user_id>/calendarList', methods=['GET'])
+@require_auth
 def list_user_calendars(user_id):
     """List the calendars in the user's own calendarList"""
     calendars = []
@@ -130,6 +131,7 @@ def list_user_calendars(user_id):
     return jsonify({"kind": "calendar#calendarList", "items": calendars}), 200
 
 @calendar_bp.route('/calendars', methods=['POST'])
+@require_auth
 def create_calendar():
     """Create a new secondary calendar"""
     data = request.get_json()
@@ -148,11 +150,13 @@ def create_calendar():
     return jsonify(new_calendar), 200
 
 @calendar_bp.route('/calendars/<cal_id>', methods=['DELETE'])
+@require_auth
 def delete_calendar(cal_id):
     """Delete a calendar owned by a user"""
     return '', 204
 
 @calendar_bp.route('/calendars/<cal_id>', methods=['GET'])
+@require_auth
 def get_calendar(cal_id):
     """Get the specified calendar"""
     calendar = {
@@ -167,6 +171,7 @@ def get_calendar(cal_id):
     return jsonify(calendar), 200
 
 @calendar_bp.route('/calendars/<cal_id>', methods=['PATCH'])
+@require_auth
 def update_calendar(cal_id):
     """Update the specified calendar"""
     data = request.get_json()
@@ -182,6 +187,7 @@ def update_calendar(cal_id):
     return jsonify(updated_calendar), 200
 
 @calendar_bp.route('/calendars/colors', methods=['GET'])
+@require_auth
 def get_calendar_colors():
     """Get the color definitions for calendars and events"""
     colors = {
@@ -192,11 +198,9 @@ def get_calendar_colors():
     return jsonify(colors), 200
 
 @calendar_bp.route('/calendars/freeBusy', methods=['POST'])
+@require_auth
 def query_freebusy():
     """Query free/busy information"""
-    token = request.headers.get('Authorization')
-    if not token:
-        return jsonify({"error": "No token provided"}), 401
 
     data = request.get_json()
     if not data or 'timeMin' not in data or 'timeMax' not in data:
@@ -234,12 +238,14 @@ def query_freebusy():
     return jsonify(response)
 
 @calendar_bp.route('/calendars/<cal_id>/events/<event_id>', methods=['DELETE'])
+@require_auth
 def delete_event(cal_id, event_id):
     """Delete an existing event from the specified calendar"""
     # Logic to delete the event
     return '', 204
 
 @calendar_bp.route('/calendars/<cal_id>/events/<event_id>', methods=['GET'])
+@require_auth
 def get_event(cal_id, event_id):
     """Get the specified event on the specified calendar"""
     # Set future dates for the event
@@ -275,6 +281,7 @@ def get_event(cal_id, event_id):
     return jsonify(event), 200
 
 @calendar_bp.route('/calendars/<cal_id>/events/import', methods=['POST'])
+@require_auth
 def import_event(cal_id):
     """Import event to the specified calendar"""
     data = request.get_json()
@@ -297,6 +304,7 @@ def import_event(cal_id):
     return jsonify(imported_event), 200
 
 @calendar_bp.route('/calendars/<cal_id>/events/quickAdd', methods=['POST'])
+@require_auth
 def quick_add_event(cal_id):
     """Quick add an event to the specified calendar"""
     text = request.args.get('text')
@@ -321,6 +329,7 @@ def quick_add_event(cal_id):
     return jsonify(quick_event), 200
 
 @calendar_bp.route('/calendars/<cal_id>/events/<event_id>/move', methods=['POST'])
+@require_auth
 def move_event(cal_id, event_id):
     """Move the specified event from a calendar to another specified calendar"""
     destination = request.args.get('destination')
@@ -345,6 +354,7 @@ def move_event(cal_id, event_id):
     return jsonify(moved_event), 200
 
 @calendar_bp.route('/calendars/<cal_id>/events', methods=['GET'])
+@require_auth
 def list_events(cal_id):
     """List events on the specified calendar"""
     events = []

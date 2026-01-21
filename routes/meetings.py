@@ -7,6 +7,7 @@ import os
 import json
 from cache_config import cache
 from functools import wraps
+from models.auth import require_auth
 
 meetings_bp = Blueprint('meetings', __name__)
 
@@ -47,11 +48,9 @@ def generate_meeting_data(user_id, from_date, to_date):
     return meetings
 
 @meetings_bp.route('/users/<user_id>/meetings', methods=['GET'])
+@require_auth
 @cache.memoize(timeout=3600)
 def get_meetings(user_id):
-    token = request.headers.get('Authorization')
-    if not token:
-        return jsonify({"error": "No token provided"}), 401
 
     from_date = request.args.get('from', '2024-07-20')
     to_date = request.args.get('to', '2024-08-18')
@@ -97,11 +96,9 @@ def get_cached_meeting_base_data(meeting_id):
     return base_data
 
 @meetings_bp.route('/users/<user_id>/meetings/<meeting_id>', methods=['GET'])
+@require_auth
 @cache.memoize(timeout=3600)
 def get_meeting(user_id, meeting_id):
-    token = request.headers.get('Authorization')
-    if not token:
-        return jsonify({"error": "No token provided"}), 401
 
     try:
         # Get consistent base data
@@ -140,11 +137,9 @@ def get_meeting(user_id, meeting_id):
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 @meetings_bp.route('/meetings/<meeting_id>/meeting_summary', methods=['GET'])
+@require_auth
 @cache.memoize(timeout=3600)
 def get_meeting_summary(meeting_id):
-    token = request.headers.get('Authorization')
-    if not token:
-        return jsonify({"error": "No token provided"}), 401
 
     try:
         # Get consistent base data
@@ -192,10 +187,8 @@ def get_meeting_summary(meeting_id):
 
 # New route to handle VTT file download
 @meetings_bp.route('/rec/download/<path:path>', methods=['GET'])
+@require_auth
 def download_vtt(path):
-    token = request.headers.get('Authorization')
-    if not token:
-        return jsonify({"error": "No token provided"}), 401
 
     try:
         file_content = get_random_file_content()
@@ -210,10 +203,8 @@ def download_vtt(path):
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 @meetings_bp.route('/past_meetings/<meeting_id>/participants', methods=['GET'])
+@require_auth
 def get_past_meeting_participants(meeting_id):
-    token = request.headers.get('Authorization')
-    if not token:
-        return jsonify({"error": "No token provided"}), 401
 
     try:
         # Get pagination parameters from query string
@@ -261,12 +252,14 @@ def get_past_meeting_participants(meeting_id):
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 @meetings_bp.route('/users/<user_id>/meetings/<meeting_id>', methods=['PATCH'])
+@require_auth
 def update_meeting(user_id, meeting_id):
     # After updating meeting
     cache.delete_memoized(get_meeting, user_id, meeting_id)
     # ... rest of the code
 
 @meetings_bp.route('/users/<user_id>/meetings/<meeting_id>', methods=['DELETE'])
+@require_auth
 def delete_meeting(user_id, meeting_id):
     cache.delete_memoized(get_meeting, user_id, meeting_id)
     cache.delete_memoized(get_meeting_summary, meeting_id)
