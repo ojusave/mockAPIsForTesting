@@ -9,11 +9,9 @@ from cache_config import cache
 users_bp = Blueprint('users', __name__)
 
 @users_bp.route('/users', methods=['GET'])
+@require_auth
 @cache.cached(timeout=3600, key_prefix='list_users')
 def get_data():
-    token = request.headers.get('Authorization')
-    if not token:
-        return jsonify({"error": "No token provided"}), 401
 
     total_records = random.randint(5000, 10000)
     page_size = 30

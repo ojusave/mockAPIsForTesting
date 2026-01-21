@@ -6,6 +6,10 @@ def require_auth(f):
     def decorated(*args, **kwargs):
         auth_header = request.headers.get('Authorization')
         
+        # Debug logging to help diagnose issues
+        print(f"DEBUG: Authorization header received: {auth_header}")
+        print(f"DEBUG: All headers: {dict(request.headers)}")
+        
         if not auth_header:
             return jsonify({"error": {
                 "code": "401",
@@ -17,7 +21,7 @@ def require_auth(f):
             return jsonify({"error": {
                 "code": "401",
                 "message": "Invalid authentication format",
-                "details": "Authorization header must start with 'Bearer'"
+                "details": f"Authorization header must start with 'Bearer '. Received: '{auth_header[:20]}...'"
             }}), 401
             
         # For mock API, we accept any token
