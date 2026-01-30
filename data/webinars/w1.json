@@ -1,0 +1,29 @@
+{
+  "id": "w1",
+  "uuid": "w1",
+  "host_id": "u1",
+  "topic": "Product Launch Webinar",
+  "type": 5,
+  "start_time": "2026-02-01T15:00:00Z",
+  "duration": 90,
+  "timezone": "America/New_York",
+  "created_at": "2026-01-10T00:00:00Z",
+  "join_url": "https://api.zoom.us/w/w1",
+  "start_url": "https://api.zoom.us/s/w1",
+  "password": "webinar123",
+  "agenda": "Launch overview, Q&A",
+  "settings": {
+    "host_video": true,
+    "panelists_video": true,
+    "practice_session": true,
+    "hd_video": true,
+    "approval_type": 0,
+    "registration_type": 1,
+    "audio": "both",
+    "auto_recording": "cloud"
+  },
+  "participants": [
+    {"id": "p1", "name": "Attendee One", "user_email": "a1@example.com", "duration": 90, "join_time": "2026-02-01T15:00:00Z", "leave_time": "2026-02-01T16:30:00Z"},
+    {"id": "p2", "name": "Attendee Two", "user_email": "a2@example.com", "duration": 45, "join_time": "2026-02-01T15:00:00Z", "leave_time": "2026-02-01T15:45:00Z"}
+  ]
+}

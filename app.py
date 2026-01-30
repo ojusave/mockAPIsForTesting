@@ -15,7 +15,12 @@ from routes.phone import phone_bp
 from routes.mail import mail_bp
 from routes.accounts import accounts_bp
 from routes.chat import chat_bp
-from routes.chatbot import chatbot_bp
+from routes.webinars import webinars_bp
+from routes.reports import reports_bp
+from routes.dashboards import dashboards_bp
+from routes.devices import devices_bp
+from routes.roles import roles_bp
+from routes.groups import groups_bp
 
 app = Flask(__name__)
 CORS(app)
@@ -31,7 +36,12 @@ app.register_blueprint(phone_bp, url_prefix="/v2/phone")
 app.register_blueprint(mail_bp)
 app.register_blueprint(accounts_bp, url_prefix="/accounts")
 app.register_blueprint(chat_bp, url_prefix="/chat")
-app.register_blueprint(chatbot_bp)
+app.register_blueprint(webinars_bp)
+app.register_blueprint(reports_bp)
+app.register_blueprint(dashboards_bp)
+app.register_blueprint(devices_bp)
+app.register_blueprint(roles_bp)
+app.register_blueprint(groups_bp)
 
 # Single VTT download route (Zoom-style recording transcript from data/meetings)
 @app.route("/rec/download/<path:path>", methods=["GET"])

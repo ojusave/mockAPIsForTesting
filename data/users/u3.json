@@ -19,6 +19,7 @@
   "status": "active",
   "language": "en-US",
   "phone_country": "JP",
-  "meeting_ids": ["m9", "m10", "m11", "m_example"],
-  "recording_meeting_ids": ["m9", "m10", "m11", "m_example"]
+  "meeting_ids": ["m9", "m10", "m11"],
+  "recording_meeting_ids": ["m9", "m10", "m11"],
+  "webinar_ids": []
 }

@@ -1,8 +1,15 @@
 # Mock Zoom API
 
-A mock API that mirrors [Zoom’s REST API](https://developers.zoom.us/docs/api/) for meetings, users, recordings, calendar, mail, chat, phone, and quality scoring. Uses random but realistic data and 2026-oriented defaults for testing and development.
+A mock API that mirrors [Zoom’s REST API](https://developers.zoom.us/docs/api/) for meetings, users, recordings, calendar, mail, chat, phone, and quality scoring. Uses file-backed data in `data/` and 2026-oriented defaults for testing and development.
 
 **Base URL:** `https://zoom-test-apis.onrender.com` (or set `BASE_URL` in `.env`)
+
+## Zoom Postman workspace & official docs
+
+- **Zoom Public Workspace (Postman):** [postman.com/zoom-developer/zoom-public-workspace/overview](https://www.postman.com/zoom-developer/zoom-public-workspace/overview) — Zoom’s official Postman workspace with **600+ REST endpoints** (users, meetings, webinars, recordings, reports, etc.) and GraphQL. Use it for the full API surface and OAuth/token setup.
+- **Zoom API reference:** [developers.zoom.us/docs/api/](https://developers.zoom.us/docs/api/) — Official REST and GraphQL docs.
+
+**This repo:** The sections below document **every endpoint implemented in this mock**. Paths and behavior are aligned with Zoom where noted; Calendar, Mail, and QSS are mock-only. For the complete official list and request/response schemas, use Zoom’s docs and Postman workspace above.
 
 ## Authentication
 
@@ -48,6 +55,8 @@ Authorization: Bearer any-token-value
 
 So: **Users, Meetings, Recordings, Past participants, Meeting summary, Accounts, Phone, and Chat** align with Zoom-documented concepts (paths may use or omit a `/v2` prefix in this mock). **Calendar, Mail, and the exact QSS paths** are not from Zoom’s docs and are for mock/testing only.
 
+**Not implemented in this mock (but in Zoom’s Postman/docs):** GraphQL (`/v3/graphql`), many sub-resources (e.g. meeting polls, registration, live stream). The tables below list **only** endpoints that exist in this mock; each is documented. Webinars, Reports, Dashboards, Devices, Roles, and Groups are now included.
+
 ---
 
 ## Users (Zoom-style)
@@ -90,6 +99,83 @@ So: **Users, Meetings, Recordings, Past participants, Meeting summary, Accounts,
 | GET | `/meetings/<meeting_id>/recordings` | List recordings for a meeting |
 | DELETE | `/meetings/<meeting_id>/recordings/<recording_id>` | Delete a recording |
 | GET | `/rec/download/<meeting_id>/transcript.vtt` | Download VTT transcript |
+
+---
+
+## Webinars
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/users/<user_id>/webinars` | List webinars (query: `from`, `to`, `page_size`) |
+| POST | `/users/<user_id>/webinars` | Create webinar |
+| GET | `/webinars/<webinar_id>` | Get webinar by ID |
+| GET | `/users/<user_id>/webinars/<webinar_id>` | Get webinar (with host) |
+| PATCH | `/users/<user_id>/webinars/<webinar_id>` | Update webinar |
+| DELETE | `/users/<user_id>/webinars/<webinar_id>` | Delete webinar |
+| GET | `/past_webinars/<webinar_id>/participants` | List past webinar participants |
+| GET | `/past_webinars/<webinar_id>/instances` | List past webinar instances |
+
+---
+
+## Reports
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/report/users` | Active/inactive host report (query: `type`, `from`, `to`) |
+| GET | `/report/meetings/<meeting_id>/participants` | Meeting participant report |
+| GET | `/report/webinars/<webinar_id>/participants` | Webinar participant report |
+| GET | `/metrics/meetings` | List meetings for metrics (query: `from`, `to`) |
+| GET | `/report/daily` | Daily report (query: `year`, `month`) |
+
+---
+
+## Dashboards / Metrics
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/metrics/meetings/<meeting_id>/participants` | Meeting participants QoS |
+| GET | `/metrics/webinars/<webinar_id>/participants` | Webinar participants QoS |
+| GET | `/metrics/crc` | CRC (Cloud Room Connector) metrics |
+| GET | `/metrics/zoom_rooms` | Zoom Rooms metrics |
+
+---
+
+## Devices (H.323/SIP)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/devices` | List devices |
+| POST | `/devices` | Create device |
+| GET | `/devices/<device_id>` | Get device |
+| PATCH | `/devices/<device_id>` | Update device |
+| DELETE | `/devices/<device_id>` | Delete device |
+
+---
+
+## Roles
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/roles` | List roles |
+| GET | `/roles/<role_id>` | Get role |
+| GET | `/roles/<role_id>/members` | List role members |
+| POST | `/roles/<role_id>/members` | Assign role to members |
+| DELETE | `/roles/<role_id>/members/<member_id>` | Remove member from role |
+
+---
+
+## Groups (IM groups)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/groups` | List groups |
+| POST | `/groups` | Create group |
+| GET | `/groups/<group_id>` | Get group |
+| PATCH | `/groups/<group_id>` | Update group |
+| DELETE | `/groups/<group_id>` | Delete group |
+| GET | `/groups/<group_id>/members` | List group members |
+| POST | `/groups/<group_id>/members` | Add members |
+| DELETE | `/groups/<group_id>/members/<member_id>` | Remove member |
 
 ---
 
@@ -199,21 +285,21 @@ Prefix: `/v2/phone`
 
 ## Sample requests (2026)
 
-**Get user:**
+**Get user (use a user id from `data/users/`, e.g. `u1`):**
 ```bash
-curl -s -X GET "https://zoom-test-apis.onrender.com/users/abc123" \
+curl -s -X GET "https://zoom-test-apis.onrender.com/users/u1" \
   -H "Authorization: Bearer any-token"
 ```
 
 **List meetings (2026 range):**
 ```bash
-curl -s -X GET "https://zoom-test-apis.onrender.com/users/abc123/meetings?from=2026-01-01&to=2026-12-31" \
+curl -s -X GET "https://zoom-test-apis.onrender.com/users/u1/meetings?from=2026-01-01&to=2026-12-31" \
   -H "Authorization: Bearer any-token"
 ```
 
-**Get meeting summary:**
+**Get meeting summary (use a meeting id from `data/meetings/`, e.g. `m1`):**
 ```bash
-curl -s -X GET "https://zoom-test-apis.onrender.com/meetings/meeting123/meeting_summary" \
+curl -s -X GET "https://zoom-test-apis.onrender.com/meetings/m1/meeting_summary" \
   -H "Authorization: Bearer any-token"
 ```
 
@@ -247,8 +333,9 @@ API responses for **users**, **meetings**, **recordings**, **meeting summary**, 
 | Path | Description |
 |------|-------------|
 | `data/accounts.json` | Zoom account list (e.g. account id, name, settings). |
-| `data/users/<user_id>.json` | Full user profile (id, first_name, last_name, email, type, timezone, status, …). Optional: `meeting_ids[]`, `recording_meeting_ids[]` to link to meetings that have recordings. |
-| `data/meetings/<meeting_id>.json` | Full meeting object (uuid, id, host_id, topic, type, start_time, duration, timezone, join_url, settings, …). Also: `summary` (title, overview, details, next_steps), `vtt_data` (transcript), `recording_files[]`, `participants[]`. |
+| `data/users/<user_id>.json` | Full user profile (id, first_name, last_name, email, type, timezone, status, …). Optional: `meeting_ids[]`, `recording_meeting_ids[]`, `webinar_ids[]`. |
+| `data/meetings/<meeting_id>.json` | Full meeting object (uuid, id, host_id, topic, type, start_time, duration, timezone, join_url, settings, …). Also: `summary`, `vtt_data`, `recording_files[]`, `participants[]`. |
+| `data/webinars/<webinar_id>.json` | Full webinar object (id, uuid, host_id, topic, type 5, start_time, duration, join_url, settings, …). Also: `participants[]` for past webinars. |
 
 - **GET /users**, **GET /users/:id** → from `data/users/`.
 - **GET /users/:id/meetings** → meetings listed in the user’s `meeting_ids`, loaded from `data/meetings/`.
@@ -259,7 +346,7 @@ API responses for **users**, **meetings**, **recordings**, **meeting summary**, 
 
 Write operations (POST/PATCH/PUT/DELETE) may return success and update in-memory/cache only; persisting to these JSON files is optional and partially implemented (e.g. user PATCH merges into loaded user and can be extended to call `data_store.save_user`).
 
-The legacy `files/` directory (meeting summaries only) is no longer used by the API; data was migrated into `data/meetings/` via `scripts/migrate_meetings_to_data.py`.
+The legacy `files/` directory (meeting summaries only) has been removed. **`data/` is the single source of truth.**
 
 ---
 

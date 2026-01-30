@@ -20,5 +20,6 @@
   "language": "en-US",
   "phone_country": "US",
   "meeting_ids": ["m1", "m2", "m3", "m4"],
-  "recording_meeting_ids": ["m1", "m2", "m3", "m4"]
+  "recording_meeting_ids": ["m1", "m2", "m3", "m4"],
+  "webinar_ids": ["w1"]
 }

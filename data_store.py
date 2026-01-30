@@ -3,12 +3,13 @@ Zoom-style data store. All API data is read from the data/ directory:
 - data/accounts.json     → account list (Zoom account structure)
 - data/users/<id>.json   → full user profile + meeting_ids, recording refs
 - data/meetings/<id>.json → meeting details + summary + vtt_data + recording_files + participants
+- data/webinars/<id>.json → webinar details + participants
 
 API routes use this module to serve GET/POST/PATCH/DELETE from file-backed data.
 """
 import os
 import json
-from config import BASE_URL, DATA_DIR, DATA_ACCOUNTS, DATA_USERS_DIR, DATA_MEETINGS_DIR
+from config import BASE_URL, DATA_DIR, DATA_ACCOUNTS, DATA_USERS_DIR, DATA_MEETINGS_DIR, DATA_WEBINARS_DIR
 
 _accounts_cache = None
 _user_ids_cache = None
@@ -221,3 +222,54 @@ def get_meetings_for_user(user_id, from_date=None, to_date=None):
             "join_url": m.get("join_url") or f"{BASE_URL}/j/{mid}",
         })
     return meetings
+
+
+# ---- Webinars (Zoom webinar: type 5, separate from meetings) ----
+def list_webinar_ids():
+    """List all webinar ids (from filenames in data/webinars/)."""
+    return _list_json_files(DATA_WEBINARS_DIR)
+
+
+def load_webinar(webinar_id):
+    """Load webinar from data/webinars/<webinar_id>.json."""
+    path = os.path.join(DATA_WEBINARS_DIR, f"{webinar_id}.json")
+    return _load_json(path)
+
+
+def get_webinars_for_user(user_id, from_date=None, to_date=None):
+    """Return list of webinar objects for user (from user's webinar_ids). Filter by from_date/to_date (YYYY-MM-DD)."""
+    u = load_user(user_id)
+    if not u:
+        return []
+    webinar_ids = u.get("webinar_ids") or []
+    webinars = []
+    for wid in webinar_ids:
+        w = load_webinar(wid)
+        if not w:
+            continue
+        start = (w.get("start_time") or "")[:10]
+        if from_date and start < from_date:
+            continue
+        if to_date and start > to_date:
+            continue
+        webinars.append({
+            "uuid": w.get("uuid") or wid,
+            "id": w.get("id") or wid,
+            "host_id": w.get("host_id") or user_id,
+            "topic": w.get("topic", ""),
+            "type": 5,
+            "start_time": w.get("start_time", ""),
+            "duration": w.get("duration", 60),
+            "timezone": w.get("timezone", "America/New_York"),
+            "created_at": w.get("created_at", ""),
+            "join_url": w.get("join_url") or f"{BASE_URL}/w/{wid}",
+        })
+    return webinars
+
+
+def get_participants_for_webinar(webinar_id):
+    """Return participants array for past webinar from data store."""
+    w = load_webinar(webinar_id)
+    if not w:
+        return []
+    return w.get("participants") or []

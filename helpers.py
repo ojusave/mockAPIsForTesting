@@ -4,30 +4,17 @@ import datetime
 import uuid
 import os
 import json
-from threading import Lock
-
 from config import BASE_URL
 
 # Re-export for backward compatibility
 __all__ = [
     "BASE_URL",
-    "get_next_file_content",
     "generate_random_string",
     "generate_random_date",
     "generate_user_id",
     "generate_base_user_data",
     "generate_cache_key",
 ]
-
-FILES_DIR = 'files'
-
-# Ensure directory exists
-os.makedirs(FILES_DIR, exist_ok=True)
-
-# Global variables for file tracking
-used_files = set()
-available_files = []
-file_lock = Lock()
 
 # Expanded list of diverse names
 first_names = [
@@ -43,30 +30,6 @@ last_names = [
     "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson", "Walker",
     "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores"
 ]
-
-def initialize_file_list():
-    global available_files
-    available_files = [f for f in os.listdir(FILES_DIR) if f.endswith('.json')]
-    if not available_files:
-        raise FileNotFoundError("No JSON files found in the /files directory")
-
-def get_next_file_content():
-    global used_files, available_files
-    with file_lock:
-        if not available_files:
-            # All files have been used, reset the list
-            used_files.clear()
-            initialize_file_list()
-        
-        file_name = random.choice(available_files)
-        available_files.remove(file_name)
-        used_files.add(file_name)
-        
-        file_path = os.path.join(FILES_DIR, file_name)
-        with open(file_path, 'r') as file:
-            content = json.load(file)
-        
-        return content, file_name
 
 def generate_random_string(length):
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
@@ -106,9 +69,6 @@ def generate_base_user_data():
         "role_id": str(random.randint(1, 5)),
         "user_created_at": generate_random_date(datetime.datetime(2022, 1, 1), datetime.datetime(2026, 12, 31)).isoformat() + "Z"
     }
-
-# Initialize the file list when the module is loaded
-initialize_file_list()
 
 def generate_cache_key(*args, **kwargs):
     """Generate a cache key from the arguments"""

@@ -65,6 +65,15 @@ def run_without_pytest():
         ("POST calendar", lambda: c.post("/calendars", headers=h, json={"summary": "Cal"})),
         ("POST freeBusy", lambda: c.post("/calendars/freeBusy", headers=h, json={"timeMin": "2026-01-01T00:00:00Z", "timeMax": "2026-01-02T00:00:00Z", "items": [{"id": "c1"}]})),
         ("POST mail send validation", lambda: c.post("/emails/mailboxes/u@x.com/messages/send", headers=h, json={})),
+        ("GET /users/:id/webinars", lambda: c.get("/users/u1/webinars?from=2026-01-01&to=2026-12-31", headers=h)),
+        ("GET /webinars/:id", lambda: c.get("/webinars/w1", headers=h)),
+        ("GET /past_webinars/:id/participants", lambda: c.get("/past_webinars/w1/participants", headers=h)),
+        ("GET /report/users", lambda: c.get("/report/users?type=active", headers=h)),
+        ("GET /report/meetings/:id/participants", lambda: c.get("/report/meetings/m1/participants", headers=h)),
+        ("GET /metrics/meetings", lambda: c.get("/metrics/meetings?from=2026-01-01&to=2026-12-31", headers=h)),
+        ("GET /devices", lambda: c.get("/devices", headers=h)),
+        ("GET /roles", lambda: c.get("/roles", headers=h)),
+        ("GET /groups", lambda: c.get("/groups", headers=h)),
         ("Auth required", lambda: c.get("/users")),
     ]
     for name, req in tests:

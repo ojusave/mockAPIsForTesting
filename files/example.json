@@ -1,9 +1,0 @@
-{
-    "summary": {
-        "summary_title": "Example Meeting",
-        "summary_overview": "This is an example meeting summary",
-        "summary_details": ["Point 1", "Point 2"],
-        "next_steps": ["Next step 1", "Next step 2"]
-    },
-    "vtt_data": "WEBVTT\n\n00:00:00.000 --> 00:00:05.000\nThis is sample VTT content."
-} 
