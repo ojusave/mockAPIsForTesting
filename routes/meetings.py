@@ -8,6 +8,8 @@ from data_store import (
     get_meetings_for_user,
     get_meeting_summary_payload,
     get_participants_for_meeting,
+    save_meeting,
+    add_meeting_to_user,
 )
 import datetime
 
@@ -61,6 +63,8 @@ def create_meeting(user_id):
         payload["schedule_for"] = data["schedule_for"]
     if data.get("template_id"):
         payload["template_id"] = data["template_id"]
+    save_meeting(meeting_id, payload)
+    add_meeting_to_user(user_id, meeting_id)
     return jsonify(payload), 201
 
 
@@ -205,6 +209,7 @@ def update_meeting(user_id, meeting_id):
         payload["start_time"] = data["start_time"]
     if "settings" in data:
         payload["settings"] = dict(payload.get("settings", {}), **data["settings"])
+    save_meeting(meeting_id, payload)
     return jsonify(payload), 200
 
 
@@ -215,3 +220,141 @@ def delete_meeting(user_id, meeting_id):
     cache.delete_memoized(get_meeting_by_id, meeting_id)
     cache.delete_memoized(get_meeting_summary, meeting_id)
     return "", 204
+
+
+# ---- Meeting polls (Zoom API: developers.zoom.us/docs/api/) ----
+@meetings_bp.route("/meetings/<meeting_id>/polls", methods=["GET"])
+@require_auth
+def list_meeting_polls(meeting_id):
+    """List meeting polls. Returns 404 if meeting not found."""
+    m = load_meeting(meeting_id)
+    if not m:
+        return jsonify({"error": {"code": "404", "message": "Meeting not found"}}), 404
+    return jsonify({"polls": m.get("polls", [])})
+
+
+@meetings_bp.route("/meetings/<meeting_id>/polls", methods=["POST"])
+@require_auth
+def create_meeting_poll(meeting_id):
+    """Create a meeting poll. Body: title, questions[].name, questions[].type."""
+    data = request.get_json() or {}
+    m = load_meeting(meeting_id)
+    if not m:
+        return jsonify({"error": {"code": "404", "message": "Meeting not found"}}), 404
+    poll_id = generate_random_string(16)
+    poll = {"id": poll_id, "title": data.get("title", "Poll"), "questions": data.get("questions", [])}
+    return jsonify(poll), 201
+
+
+@meetings_bp.route("/meetings/<meeting_id>/polls/<poll_id>", methods=["GET"])
+@require_auth
+def get_meeting_poll(meeting_id, poll_id):
+    """Get a meeting poll by ID."""
+    m = load_meeting(meeting_id)
+    if not m:
+        return jsonify({"error": {"code": "404", "message": "Meeting not found"}}), 404
+    polls = m.get("polls", [])
+    poll = next((p for p in polls if p.get("id") == poll_id), None)
+    if not poll:
+        return jsonify({"error": {"code": "404", "message": "Poll not found"}}), 404
+    return jsonify(poll)
+
+
+@meetings_bp.route("/meetings/<meeting_id>/polls/<poll_id>", methods=["PATCH"])
+@require_auth
+def update_meeting_poll(meeting_id, poll_id):
+    """Update a meeting poll. Body: title, questions."""
+    data = request.get_json() or {}
+    m = load_meeting(meeting_id)
+    if not m:
+        return jsonify({"error": {"code": "404", "message": "Meeting not found"}}), 404
+    poll = {"id": poll_id, "title": data.get("title", "Poll"), "questions": data.get("questions", [])}
+    return jsonify(poll), 200
+
+
+@meetings_bp.route("/meetings/<meeting_id>/polls/<poll_id>", methods=["DELETE"])
+@require_auth
+def delete_meeting_poll(meeting_id, poll_id):
+    """Delete a meeting poll."""
+    m = load_meeting(meeting_id)
+    if not m:
+        return jsonify({"error": {"code": "404", "message": "Meeting not found"}}), 404
+    return "", 204
+
+
+# ---- Meeting registrants (Zoom API) ----
+@meetings_bp.route("/meetings/<meeting_id>/registrants", methods=["GET"])
+@require_auth
+def list_meeting_registrants(meeting_id):
+    """List meeting registrants. Query: page_size, next_page_token, status."""
+    m = load_meeting(meeting_id)
+    if not m:
+        return jsonify({"error": {"code": "404", "message": "Meeting not found"}}), 404
+    registrants = m.get("registrants", [])
+    page_size = min(int(request.args.get("page_size", 30)), 300)
+    page_number = max(1, int(request.args.get("page_number", 1)))
+    total = len(registrants)
+    start = (page_number - 1) * page_size
+    page_reg = registrants[start : start + page_size]
+    return jsonify({
+        "registrants": page_reg,
+        "page_count": max(1, (total + page_size - 1) // page_size),
+        "page_size": page_size,
+        "total_records": total,
+        "next_page_token": generate_random_string(32) if start + page_size < total else "",
+    })
+
+
+@meetings_bp.route("/meetings/<meeting_id>/registrants", methods=["POST"])
+@require_auth
+def add_meeting_registrants(meeting_id):
+    """Add meeting registrants. Body: registrants[].email, registrants[].first_name, registrants[].last_name."""
+    data = request.get_json() or {}
+    m = load_meeting(meeting_id)
+    if not m:
+        return jsonify({"error": {"code": "404", "message": "Meeting not found"}}), 404
+    regs = data.get("registrants", [])
+    added = [{"id": generate_random_string(22), "email": r.get("email"), "first_name": r.get("first_name"), "last_name": r.get("last_name")} for r in regs]
+    return jsonify({"registrants": added, "id": meeting_id, "start_url": f"{BASE_URL}/s/{meeting_id}"}), 201
+
+
+@meetings_bp.route("/meetings/<meeting_id>/registrants/status", methods=["PATCH"])
+@require_auth
+def update_meeting_registrants_status(meeting_id):
+    """Update registrant status. Body: action (approve/deny), registrants[].id."""
+    data = request.get_json() or {}
+    action = data.get("action", "approve")
+    return jsonify({"id": meeting_id, "registrants": data.get("registrants", [])}), 200
+
+
+# ---- Meeting livestream (Zoom API) ----
+@meetings_bp.route("/meetings/<meeting_id>/livestream", methods=["GET"])
+@require_auth
+def get_meeting_livestream(meeting_id):
+    """Get meeting livestream settings."""
+    m = load_meeting(meeting_id)
+    if not m:
+        return jsonify({"error": {"code": "404", "message": "Meeting not found"}}), 404
+    return jsonify({"stream_url": "", "stream_key": "", "page_url": ""})
+
+
+@meetings_bp.route("/meetings/<meeting_id>/livestream", methods=["PATCH"])
+@require_auth
+def update_meeting_livestream(meeting_id):
+    """Update meeting livestream. Body: stream_url, stream_key, page_url."""
+    data = request.get_json() or {}
+    m = load_meeting(meeting_id)
+    if not m:
+        return jsonify({"error": {"code": "404", "message": "Meeting not found"}}), 404
+    return jsonify({"stream_url": data.get("stream_url", ""), "stream_key": data.get("stream_key", ""), "page_url": data.get("page_url", "")}), 200
+
+
+# ---- Past meeting instances (recurring) ----
+@meetings_bp.route("/past_meetings/<meeting_id>/instances", methods=["GET"])
+@require_auth
+def get_past_meeting_instances(meeting_id):
+    """List past meeting instances (recurring). Returns single instance if one-off."""
+    m = load_meeting(meeting_id)
+    if not m:
+        return jsonify({"error": {"code": "404", "message": "Meeting not found"}}), 404
+    return jsonify({"meetings": [{"uuid": m.get("uuid", meeting_id), "start_time": m.get("start_time", ""), "id": m.get("id", meeting_id)}]})

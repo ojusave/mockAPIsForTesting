@@ -1,6 +1,6 @@
 {
   "id": "u1",
-  "first_name": "Alice",
+  "first_name": "Patched",
   "last_name": "Chen",
   "display_name": "Alice Chen",
   "email": "alice.chen@zoom-mock.com",
@@ -19,7 +19,23 @@
   "status": "active",
   "language": "en-US",
   "phone_country": "US",
-  "meeting_ids": ["m1", "m2", "m3", "m4"],
-  "recording_meeting_ids": ["m1", "m2", "m3", "m4"],
-  "webinar_ids": ["w1"]
+  "meeting_ids": [
+    "m1",
+    "m2",
+    "m3",
+    "m4",
+    "baFhEUS2sPreUVUxuLgKF7",
+    "l4V6ZIuCY1GesvbU5IUXjO"
+  ],
+  "recording_meeting_ids": [
+    "m1",
+    "m2",
+    "m3",
+    "m4",
+    "baFhEUS2sPreUVUxuLgKF7",
+    "l4V6ZIuCY1GesvbU5IUXjO"
+  ],
+  "webinar_ids": [
+    "w1"
+  ]
 }

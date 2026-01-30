@@ -170,3 +170,104 @@ def get_past_webinar_instances(webinar_id):
     return jsonify({
         "instances": [{"start_time": w.get("start_time", ""), "uuid": w.get("uuid", webinar_id)}],
     })
+
+
+# ---- Webinar polls (Zoom API: developers.zoom.us/docs/api/) ----
+@webinars_bp.route("/webinars/<webinar_id>/polls", methods=["GET"])
+@require_auth
+def list_webinar_polls(webinar_id):
+    """List webinar polls."""
+    w = load_webinar(webinar_id)
+    if not w:
+        return jsonify({"error": {"code": "404", "message": "Webinar not found"}}), 404
+    return jsonify({"polls": w.get("polls", [])})
+
+
+@webinars_bp.route("/webinars/<webinar_id>/polls", methods=["POST"])
+@require_auth
+def create_webinar_poll(webinar_id):
+    """Create webinar poll. Body: title, questions."""
+    data = request.get_json() or {}
+    w = load_webinar(webinar_id)
+    if not w:
+        return jsonify({"error": {"code": "404", "message": "Webinar not found"}}), 404
+    poll_id = generate_random_string(16)
+    poll = {"id": poll_id, "title": data.get("title", "Poll"), "questions": data.get("questions", [])}
+    return jsonify(poll), 201
+
+
+@webinars_bp.route("/webinars/<webinar_id>/polls/<poll_id>", methods=["GET"])
+@require_auth
+def get_webinar_poll(webinar_id, poll_id):
+    """Get webinar poll by ID."""
+    w = load_webinar(webinar_id)
+    if not w:
+        return jsonify({"error": {"code": "404", "message": "Webinar not found"}}), 404
+    polls = w.get("polls", [])
+    poll = next((p for p in polls if p.get("id") == poll_id), None)
+    if not poll:
+        return jsonify({"error": {"code": "404", "message": "Poll not found"}}), 404
+    return jsonify(poll)
+
+
+@webinars_bp.route("/webinars/<webinar_id>/polls/<poll_id>", methods=["PATCH"])
+@require_auth
+def update_webinar_poll(webinar_id, poll_id):
+    """Update webinar poll. Body: title, questions."""
+    data = request.get_json() or {}
+    poll = {"id": poll_id, "title": data.get("title", "Poll"), "questions": data.get("questions", [])}
+    return jsonify(poll), 200
+
+
+@webinars_bp.route("/webinars/<webinar_id>/polls/<poll_id>", methods=["DELETE"])
+@require_auth
+def delete_webinar_poll(webinar_id, poll_id):
+    """Delete webinar poll."""
+    w = load_webinar(webinar_id)
+    if not w:
+        return jsonify({"error": {"code": "404", "message": "Webinar not found"}}), 404
+    return "", 204
+
+
+# ---- Webinar registrants (Zoom API) ----
+@webinars_bp.route("/webinars/<webinar_id>/registrants", methods=["GET"])
+@require_auth
+def list_webinar_registrants(webinar_id):
+    """List webinar registrants. Query: page_size, status."""
+    w = load_webinar(webinar_id)
+    if not w:
+        return jsonify({"error": {"code": "404", "message": "Webinar not found"}}), 404
+    registrants = w.get("registrants", [])
+    page_size = min(int(request.args.get("page_size", 30)), 300)
+    page_number = max(1, int(request.args.get("page_number", 1)))
+    total = len(registrants)
+    start = (page_number - 1) * page_size
+    page_reg = registrants[start : start + page_size]
+    return jsonify({
+        "registrants": page_reg,
+        "page_count": max(1, (total + page_size - 1) // page_size),
+        "page_size": page_size,
+        "total_records": total,
+        "next_page_token": generate_random_string(32) if start + page_size < total else "",
+    })
+
+
+@webinars_bp.route("/webinars/<webinar_id>/registrants", methods=["POST"])
+@require_auth
+def add_webinar_registrants(webinar_id):
+    """Add webinar registrants. Body: registrants[].email, first_name, last_name."""
+    data = request.get_json() or {}
+    w = load_webinar(webinar_id)
+    if not w:
+        return jsonify({"error": {"code": "404", "message": "Webinar not found"}}), 404
+    regs = data.get("registrants", [])
+    added = [{"id": generate_random_string(22), "email": r.get("email"), "first_name": r.get("first_name"), "last_name": r.get("last_name")} for r in regs]
+    return jsonify({"registrants": added, "id": webinar_id}), 201
+
+
+@webinars_bp.route("/webinars/<webinar_id>/registrants/status", methods=["PATCH"])
+@require_auth
+def update_webinar_registrants_status(webinar_id):
+    """Update webinar registrant status. Body: action (approve/deny), registrants[].id."""
+    data = request.get_json() or {}
+    return jsonify({"id": webinar_id, "registrants": data.get("registrants", [])}), 200

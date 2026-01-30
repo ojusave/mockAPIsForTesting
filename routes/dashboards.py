@@ -5,6 +5,7 @@ from flask import Blueprint, jsonify, request
 from helpers import generate_random_string
 from config import DEFAULT_DATE_FROM, DEFAULT_DATE_TO
 from models.auth import require_auth
+from data_store import get_participants_for_meeting
 
 dashboards_bp = Blueprint("dashboards", __name__)
 
@@ -12,27 +13,41 @@ dashboards_bp = Blueprint("dashboards", __name__)
 @dashboards_bp.route("/metrics/meetings/<meeting_id>/participants", methods=["GET"])
 @require_auth
 def metrics_meeting_participants(meeting_id):
-    """Get meeting participants QoS/metrics. Query: type (past|live), page_size."""
+    """Get meeting participants QoS/metrics from data store. Query: type (past|live), page_size."""
     page_size = min(int(request.args.get("page_size", 30)), 300)
+    page_number = max(1, int(request.args.get("page_number", 1)))
+    participants = get_participants_for_meeting(meeting_id)
+    total = len(participants)
+    start = (page_number - 1) * page_size
+    page_part = participants[start : start + page_size]
     return jsonify({
         "meeting_id": meeting_id,
         "page_size": page_size,
-        "next_page_token": "",
-        "participants": [
-            {"id": "p1", "user_id": "u1", "user_name": "User One", "device": "Windows", "ip_address": "1.2.3.4", "location": "US", "join_time": "2026-01-15T14:00:00Z", "leave_time": "2026-01-15T15:00:00Z", "duration": 3600}
-        ],
+        "page_number": page_number,
+        "total_records": total,
+        "next_page_token": generate_random_string(32) if start + page_size < total else "",
+        "participants": page_part,
     })
 
 
 @dashboards_bp.route("/metrics/webinars/<webinar_id>/participants", methods=["GET"])
 @require_auth
 def metrics_webinar_participants(webinar_id):
-    """Get webinar participants QoS/metrics."""
+    """Get webinar participants QoS/metrics from data store."""
+    from data_store import get_participants_for_webinar
+    page_size = min(int(request.args.get("page_size", 30)), 300)
+    page_number = max(1, int(request.args.get("page_number", 1)))
+    participants = get_participants_for_webinar(webinar_id)
+    total = len(participants)
+    start = (page_number - 1) * page_size
+    page_part = participants[start : start + page_size]
     return jsonify({
         "webinar_id": webinar_id,
-        "page_size": 30,
-        "next_page_token": "",
-        "participants": [],
+        "page_size": page_size,
+        "page_number": page_number,
+        "total_records": total,
+        "next_page_token": generate_random_string(32) if start + page_size < total else "",
+        "participants": page_part,
     })
 
 

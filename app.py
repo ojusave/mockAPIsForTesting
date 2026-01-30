@@ -21,30 +21,34 @@ from routes.dashboards import dashboards_bp
 from routes.devices import devices_bp
 from routes.roles import roles_bp
 from routes.groups import groups_bp
+from routes.tracking_fields import tracking_fields_bp
+from routes.rooms import rooms_bp
 
 app = Flask(__name__)
 CORS(app)
 cache.init_app(app)
 
-# Register blueprints (Zoom-style paths: no /v2 prefix for core resources)
-app.register_blueprint(users_bp)
-app.register_blueprint(meetings_bp)
-app.register_blueprint(recordings_bp)
-app.register_blueprint(qss_bp)
-app.register_blueprint(calendar_bp)
+# Base URL for API: https://api.zoom.us/v2/ (Zoom API reference)
+app.register_blueprint(users_bp, url_prefix="/v2")
+app.register_blueprint(meetings_bp, url_prefix="/v2")
+app.register_blueprint(recordings_bp, url_prefix="/v2")
+app.register_blueprint(qss_bp, url_prefix="/v2")
+app.register_blueprint(calendar_bp, url_prefix="/v2")
 app.register_blueprint(phone_bp, url_prefix="/v2/phone")
-app.register_blueprint(mail_bp)
-app.register_blueprint(accounts_bp, url_prefix="/accounts")
-app.register_blueprint(chat_bp, url_prefix="/chat")
-app.register_blueprint(webinars_bp)
-app.register_blueprint(reports_bp)
-app.register_blueprint(dashboards_bp)
-app.register_blueprint(devices_bp)
-app.register_blueprint(roles_bp)
-app.register_blueprint(groups_bp)
+app.register_blueprint(mail_bp, url_prefix="/v2")
+app.register_blueprint(accounts_bp, url_prefix="/v2/accounts")
+app.register_blueprint(chat_bp, url_prefix="/v2/chat")
+app.register_blueprint(webinars_bp, url_prefix="/v2")
+app.register_blueprint(reports_bp, url_prefix="/v2")
+app.register_blueprint(dashboards_bp, url_prefix="/v2")
+app.register_blueprint(devices_bp, url_prefix="/v2")
+app.register_blueprint(roles_bp, url_prefix="/v2")
+app.register_blueprint(groups_bp, url_prefix="/v2")
+app.register_blueprint(tracking_fields_bp, url_prefix="/v2")
+app.register_blueprint(rooms_bp, url_prefix="/v2")
 
-# Single VTT download route (Zoom-style recording transcript from data/meetings)
-@app.route("/rec/download/<path:path>", methods=["GET"])
+# Recording transcript download and cache (under /v2 to match Zoom base URL)
+@app.route("/v2/rec/download/<path:path>", methods=["GET"])
 def download_vtt(path):
     parts = path.split("/")
     if len(parts) != 2 or parts[1] != "transcript.vtt":
@@ -55,7 +59,7 @@ def download_vtt(path):
         return jsonify({"error": {"code": "404", "message": "VTT not found", "details": f"No transcript for meeting: {meeting_id}"}}), 404
     return Response(vtt_data, mimetype="text/vtt")
 
-@app.route("/cache/clear", methods=["POST"])
+@app.route("/v2/cache/clear", methods=["POST"])
 def clear_cache():
     try:
         cache.clear()
@@ -64,7 +68,7 @@ def clear_cache():
         return jsonify({"error": {"code": "500", "message": str(e)}}), 500
 
 
-@app.route("/cache/clear/<key>", methods=["POST"])
+@app.route("/v2/cache/clear/<key>", methods=["POST"])
 def clear_cache_key(key):
     try:
         cache.delete(key)

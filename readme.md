@@ -285,21 +285,21 @@ Prefix: `/v2/phone`
 
 ## Sample requests (2026)
 
-**Get user (use a user id from `data/users/`, e.g. `u1`):**
+**Get user (use any user id; get one from `GET /v2/users` or use an id — mock returns data for any id):**
 ```bash
-curl -s -X GET "https://zoom-test-apis.onrender.com/users/u1" \
+curl -s -X GET "https://zoom-test-apis.onrender.com/v2/users/<user_id>" \
   -H "Authorization: Bearer any-token"
 ```
 
 **List meetings (2026 range):**
 ```bash
-curl -s -X GET "https://zoom-test-apis.onrender.com/users/u1/meetings?from=2026-01-01&to=2026-12-31" \
+curl -s -X GET "https://zoom-test-apis.onrender.com/v2/users/<user_id>/meetings?from=2026-01-01&to=2026-12-31" \
   -H "Authorization: Bearer any-token"
 ```
 
-**Get meeting summary (use a meeting id from `data/meetings/`, e.g. `m1`):**
+**Get meeting summary (use any meeting id from list or any id — mock returns data):**
 ```bash
-curl -s -X GET "https://zoom-test-apis.onrender.com/meetings/m1/meeting_summary" \
+curl -s -X GET "https://zoom-test-apis.onrender.com/v2/meetings/<meeting_id>/meeting_summary" \
   -H "Authorization: Bearer any-token"
 ```
 

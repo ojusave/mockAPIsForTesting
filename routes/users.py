@@ -3,7 +3,7 @@ from helpers import generate_user_id
 from config import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
 from models.auth import require_auth
 from cache_config import cache
-from data_store import list_user_ids, load_user
+from data_store import list_user_ids, load_user, save_user
 import random
 import os
 from datetime import datetime, timedelta
@@ -65,6 +65,7 @@ def create_user():
     }
     if data.get("password") is not None:
         user["password"] = "[REDACTED]"
+    save_user(user_id, user)
     return jsonify(user), 201
 
 
@@ -75,6 +76,20 @@ def delete_user(user_id):
     cache.delete_memoized(get_user, user_id)
     cache.delete("list_users")
     return "", 204
+
+
+@users_bp.route("/users/me", methods=["GET"])
+@require_auth
+def get_current_user():
+    """Get current user (Zoom API: GET /v2/users/me). Mock: returns first user from data store."""
+    all_ids = list_user_ids()
+    if not all_ids:
+        return jsonify({"error": {"code": "404", "message": "User not found", "details": "No users in data store"}}), 404
+    user = load_user(all_ids[0])
+    if not user:
+        return jsonify({"error": {"code": "404", "message": "User not found"}}), 404
+    return jsonify(user)
+
 
 @users_bp.route("/users/<user_id>", methods=["GET"])
 @cache.memoize(timeout=3600)
@@ -120,6 +135,36 @@ def revoke_user_token(user_id):
     # Mock response - return 204 for successful deletion
     return '', 204
 
+@users_bp.route("/users/<user_id>/settings", methods=["GET"])
+@require_auth
+def get_user_settings(user_id):
+    """Get user settings (Zoom API: schedule_meeting, in_meeting, email_notification, etc.)."""
+    u = load_user(user_id)
+    if not u:
+        return jsonify({"error": {"code": "404", "message": "User not found"}}), 404
+    settings = u.get("settings", {})
+    if not settings:
+        settings = {
+            "schedule_meeting": {"host_video": True, "participant_video": False, "join_before_host": False},
+            "in_meeting": {"mute_upon_entry": True, "waiting_room": True},
+            "email_notification": {"jbh_reminder": True, "cancel_reminder": True},
+        }
+    return jsonify(settings)
+
+
+@users_bp.route("/users/<user_id>/settings", methods=["PATCH"])
+@require_auth
+def update_user_settings(user_id):
+    """Update user settings. Body: schedule_meeting, in_meeting, email_notification, etc."""
+    data = request.get_json() or {}
+    u = load_user(user_id)
+    if not u:
+        return jsonify({"error": {"code": "404", "message": "User not found"}}), 404
+    current = u.get("settings", {})
+    merged = dict(current, **{k: v for k, v in data.items() if v is not None})
+    return jsonify(merged), 200
+
+
 @users_bp.route("/users/<user_id>/settings/virtual_backgrounds", methods=["POST"])
 @require_auth
 def upload_virtual_background(user_id):
@@ -164,4 +209,5 @@ def update_user(user_id):
             base[key] = data[key]
     if "first_name" in data or "last_name" in data:
         base["display_name"] = base.get("display_name") or f"{base.get('first_name', '')} {base.get('last_name', '')}"
+    save_user(user_id, base)
     return jsonify(base), 200

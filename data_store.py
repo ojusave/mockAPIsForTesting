@@ -1,18 +1,25 @@
 """
-Zoom-style data store. All API data is read from the data/ directory:
-- data/accounts.json     → account list (Zoom account structure)
+Zoom-style data store. API data is read from the data/ directory and/or in-memory store.
 - data/users/<id>.json   → full user profile + meeting_ids, recording refs
 - data/meetings/<id>.json → meeting details + summary + vtt_data + recording_files + participants
 - data/webinars/<id>.json → webinar details + participants
 
-API routes use this module to serve GET/POST/PATCH/DELETE from file-backed data.
+Any ID requested that is not in file or memory gets a generated mock entity (stored in memory)
+so that "whatever they input returns a result" for mock testing.
+Creates (POST) persist to memory and optionally to file.
 """
 import os
 import json
+import datetime
 from config import BASE_URL, DATA_DIR, DATA_ACCOUNTS, DATA_USERS_DIR, DATA_MEETINGS_DIR, DATA_WEBINARS_DIR
 
 _accounts_cache = None
 _user_ids_cache = None
+
+# In-memory store for created/generated entities (any input returns a result)
+_memory_users = {}
+_memory_meetings = {}
+_memory_webinars = {}
 
 
 def _load_json(path, default=None):
@@ -37,6 +44,100 @@ def _list_json_files(dir_path):
     ]
 
 
+def _build_mock_meeting(meeting_id, host_id="mock_host"):
+    """Build a full mock meeting (summary, vtt_data, recording_files, participants) for any ID."""
+    now = datetime.datetime.utcnow()
+    start = (now - datetime.timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    rec_id = f"rec_{meeting_id}"
+    return {
+        "uuid": meeting_id,
+        "id": meeting_id,
+        "host_id": host_id,
+        "host_email": f"{host_id}@zoom-mock.com",
+        "topic": f"Meeting {meeting_id}",
+        "type": 2,
+        "start_time": start,
+        "duration": 60,
+        "timezone": "America/New_York",
+        "created_at": start,
+        "join_url": f"{BASE_URL}/j/{meeting_id}",
+        "start_url": f"{BASE_URL}/s/{meeting_id}",
+        "password": "mock123",
+        "agenda": "",
+        "settings": {"host_video": True, "participant_video": False, "mute_upon_entry": True, "waiting_room": True},
+        "summary": {
+            "summary_title": f"Meeting {meeting_id}",
+            "summary_overview": "Mock summary for testing.",
+            "summary_details": ["Point 1", "Point 2"],
+            "next_steps": ["Follow up"],
+        },
+        "vtt_data": f"WEBVTT\n\n00:00:00 --> 00:01:00 Speaker: Mock transcript for {meeting_id}.",
+        "recording_files": [
+            {
+                "id": rec_id,
+                "meeting_id": meeting_id,
+                "recording_start": start,
+                "recording_end": start,
+                "file_type": "MP4",
+                "file_extension": "MP4",
+                "file_size": 1000000,
+                "play_url": f"{BASE_URL}/rec/play/{rec_id}",
+                "download_url": f"{BASE_URL}/rec/download/{meeting_id}/transcript.vtt",
+                "status": "completed",
+            }
+        ],
+        "participants": [
+            {"id": f"p_{meeting_id}", "name": "Participant", "user_id": host_id, "user_email": f"{host_id}@zoom-mock.com", "join_time": start, "leave_time": start, "duration": 3600}
+        ],
+    }
+
+
+def get_or_create_mock_user(user_id):
+    """Return a mock user for any ID; store in memory so subsequent GETs are consistent."""
+    from helpers import generate_base_user_data
+    data = generate_base_user_data()
+    data["id"] = user_id
+    data["email"] = data.get("email") or f"{user_id}@zoom-mock.com"
+    data["meeting_ids"] = [f"{user_id}_m1"]
+    data["recording_meeting_ids"] = [f"{user_id}_m1"]
+    data["webinar_ids"] = [f"{user_id}_w1"]
+    _memory_users[user_id] = data
+    global _user_ids_cache
+    _user_ids_cache = None
+    return data
+
+
+def get_or_create_mock_meeting(meeting_id, host_id=None):
+    """Return a mock meeting for any ID; store in memory. Infers host from id when e.g. user_id_m1."""
+    if host_id is None and meeting_id.endswith("_m1"):
+        host_id = meeting_id[:-3]
+    m = _build_mock_meeting(meeting_id, host_id=host_id or "mock_host")
+    _memory_meetings[meeting_id] = m
+    return m
+
+
+def get_or_create_mock_webinar(webinar_id, host_id=None):
+    """Return a mock webinar for any ID; store in memory."""
+    host_id = host_id or "mock_host"
+    now = datetime.datetime.utcnow()
+    start = (now - datetime.timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    w = {
+        "uuid": webinar_id,
+        "id": webinar_id,
+        "host_id": host_id,
+        "topic": f"Webinar {webinar_id}",
+        "type": 5,
+        "start_time": start,
+        "duration": 60,
+        "timezone": "America/New_York",
+        "created_at": start,
+        "join_url": f"{BASE_URL}/w/{webinar_id}",
+        "participants": [{"id": f"wp_{webinar_id}", "name": "Attendee", "user_id": host_id}],
+    }
+    _memory_webinars[webinar_id] = w
+    return w
+
+
 # ---- Accounts (Zoom account structure) ----
 def load_accounts():
     """Load accounts list from data/accounts.json."""
@@ -59,28 +160,37 @@ def get_account(account_id):
     return None
 
 
-# ---- Users (full Zoom user profile per file) ----
+# ---- Users (full Zoom user profile per file + in-memory) ----
 def list_user_ids():
-    """List all user ids (from filenames in data/users/)."""
+    """List all user ids (from data/users/ files + in-memory store)."""
     global _user_ids_cache
     if _user_ids_cache is not None:
         return _user_ids_cache
-    _user_ids_cache = _list_json_files(DATA_USERS_DIR)
+    file_ids = _list_json_files(DATA_USERS_DIR)
+    _user_ids_cache = sorted(set(file_ids) | set(_memory_users.keys()))
     return _user_ids_cache
 
 
 def load_user(user_id):
     """
-    Load full user profile from data/users/<user_id>.json.
-    File shape: Zoom user object (id, first_name, last_name, email, type, pmi, timezone, ...)
-    plus optional: meeting_ids[], recording_meeting_ids[] (meetings that have recordings).
+    Load user: in-memory first, then data/users/<user_id>.json.
+    If not found, create and store a mock user for that ID (any input returns a result).
     """
+    if user_id in _memory_users:
+        return dict(_memory_users[user_id])
     path = os.path.join(DATA_USERS_DIR, f"{user_id}.json")
-    return _load_json(path)
+    if os.path.isfile(path):
+        data = _load_json(path)
+        if data:
+            return data
+    return get_or_create_mock_user(user_id)
 
 
 def save_user(user_id, payload):
-    """Overwrite user file (for PATCH/create). Used only if you want mock to persist."""
+    """Persist user to in-memory store and optionally to file (data/users/<id>.json)."""
+    payload = dict(payload)
+    payload["id"] = user_id
+    _memory_users[user_id] = payload
     os.makedirs(DATA_USERS_DIR, exist_ok=True)
     path = os.path.join(DATA_USERS_DIR, f"{user_id}.json")
     with open(path, "w", encoding="utf-8") as f:
@@ -89,20 +199,52 @@ def save_user(user_id, payload):
     _user_ids_cache = None
 
 
+def add_meeting_to_user(user_id, meeting_id):
+    """Add a meeting_id to user's meeting_ids and recording_meeting_ids (used after creating a meeting)."""
+    u = load_user(user_id)
+    u = dict(u)
+    mids = list(u.get("meeting_ids") or [])
+    if meeting_id not in mids:
+        mids.append(meeting_id)
+    u["meeting_ids"] = mids
+    recs = list(u.get("recording_meeting_ids") or [])
+    if meeting_id not in recs:
+        recs.append(meeting_id)
+    u["recording_meeting_ids"] = recs
+    save_user(user_id, u)
+
+
 # ---- Meetings (Zoom meeting + summary + vtt + recording_files + participants) ----
 def list_meeting_ids():
-    """List all meeting ids (from filenames in data/meetings/)."""
-    return _list_json_files(DATA_MEETINGS_DIR)
+    """List all meeting ids (from data/meetings/ files + in-memory store)."""
+    return sorted(set(_list_json_files(DATA_MEETINGS_DIR)) | set(_memory_meetings.keys()))
 
 
 def load_meeting(meeting_id):
     """
-    Load meeting from data/meetings/<meeting_id>.json.
-    Expected keys: Zoom meeting (uuid, id, host_id, topic, type, start_time, duration, ...),
-    summary {}, vtt_data "", recording_files [], participants [].
+    Load meeting: in-memory first, then data/meetings/<meeting_id>.json.
+    If not found, create and store a mock meeting for that ID (any input returns a result).
     """
+    if meeting_id in _memory_meetings:
+        return dict(_memory_meetings[meeting_id])
     path = os.path.join(DATA_MEETINGS_DIR, f"{meeting_id}.json")
-    return _load_json(path)
+    if os.path.isfile(path):
+        data = _load_json(path)
+        if data:
+            return data
+    return get_or_create_mock_meeting(meeting_id)
+
+
+def save_meeting(meeting_id, payload):
+    """Persist meeting to in-memory store and optionally to file (data/meetings/<id>.json)."""
+    payload = dict(payload)
+    payload["id"] = meeting_id
+    payload["uuid"] = payload.get("uuid") or meeting_id
+    _memory_meetings[meeting_id] = payload
+    os.makedirs(DATA_MEETINGS_DIR, exist_ok=True)
+    path = os.path.join(DATA_MEETINGS_DIR, f"{meeting_id}.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2)
 
 
 def get_meeting_summary_payload(meeting_id):
@@ -231,9 +373,18 @@ def list_webinar_ids():
 
 
 def load_webinar(webinar_id):
-    """Load webinar from data/webinars/<webinar_id>.json."""
+    """
+    Load webinar: in-memory first, then data/webinars/<webinar_id>.json.
+    If not found, create and store a mock webinar for that ID (any input returns a result).
+    """
+    if webinar_id in _memory_webinars:
+        return dict(_memory_webinars[webinar_id])
     path = os.path.join(DATA_WEBINARS_DIR, f"{webinar_id}.json")
-    return _load_json(path)
+    if os.path.isfile(path):
+        data = _load_json(path)
+        if data:
+            return data
+    return get_or_create_mock_webinar(webinar_id)
 
 
 def get_webinars_for_user(user_id, from_date=None, to_date=None):

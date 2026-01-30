@@ -1,0 +1,22 @@
+{
+  "uuid": "U25CPpDdj9DQVoJhV1OEE8",
+  "id": "U25CPpDdj9DQVoJhV1OEE8",
+  "host_id": "9RXWBk2bIlIoXYEYW9prO0",
+  "topic": "Updated",
+  "type": 2,
+  "start_time": "2026-01-31T23:24:11Z",
+  "duration": 30,
+  "timezone": "America/New_York",
+  "agenda": "",
+  "created_at": "2026-01-30T23:24:11Z",
+  "join_url": "https://api.zoom.us/j/U25CPpDdj9DQVoJhV1OEE8",
+  "start_url": "https://api.zoom.us/s/U25CPpDdj9DQVoJhV1OEE8",
+  "password": "xZLSyO",
+  "settings": {
+    "host_video": true,
+    "participant_video": false,
+    "join_before_host": false,
+    "mute_upon_entry": true,
+    "waiting_room": true
+  }
+}
