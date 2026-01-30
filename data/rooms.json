@@ -1,0 +1,6 @@
+{
+  "rooms": [
+    {"id": "room1", "name": "Conference Room A", "calendar_name": "Room A", "status": "Offline", "location_id": "loc1"},
+    {"id": "room2", "name": "Conference Room B", "calendar_name": "Room B", "status": "Available", "location_id": "loc1"}
+  ]
+}

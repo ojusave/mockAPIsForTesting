@@ -1,0 +1,28 @@
+{
+  "channels": {
+    "1": {
+      "id": "1",
+      "name": "Ch1",
+      "type": 1,
+      "channel_settings": {}
+    },
+    "2": {
+      "id": "2",
+      "name": "Ch1",
+      "type": 1,
+      "channel_settings": {}
+    },
+    "3": {
+      "id": "3",
+      "name": "Ch1",
+      "type": 1,
+      "channel_settings": {}
+    },
+    "4": {
+      "id": "4",
+      "name": "Ch1",
+      "type": 1,
+      "channel_settings": {}
+    }
+  }
+}

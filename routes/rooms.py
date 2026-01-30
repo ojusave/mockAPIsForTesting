@@ -1,18 +1,12 @@
 """
-Zoom Rooms API (conference room devices). Mirrors Zoom REST (developers.zoom.us/docs/api/).
-Distinct from Zoom Phone rooms (v2/phone/rooms).
+Zoom Rooms API. Source of truth: data/rooms.json.
 """
 from flask import Blueprint, jsonify, request
 from models.auth import require_auth
 from helpers import generate_random_string, BASE_URL
+from data_store import load_rooms, save_rooms
 
 rooms_bp = Blueprint("rooms", __name__)
-
-# In-memory mock; replace with data_store if needed
-_rooms = [
-    {"id": "room1", "name": "Conference Room A", "calendar_name": "Room A", "status": "Offline", "location_id": "loc1"},
-    {"id": "room2", "name": "Conference Room B", "calendar_name": "Room B", "status": "Available", "location_id": "loc1"},
-]
 
 
 @rooms_bp.route("/rooms", methods=["GET"])
@@ -23,7 +17,8 @@ def list_rooms():
     page_number = max(1, int(request.args.get("page_number", 1)))
     status_filter = request.args.get("status")
     location_id = request.args.get("location_id")
-    filtered = _rooms
+    rooms = load_rooms()
+    filtered = rooms
     if status_filter:
         filtered = [r for r in filtered if r.get("status") == status_filter]
     if location_id:
@@ -53,7 +48,9 @@ def create_room():
         "calendar_name": data.get("calendar_name", ""),
         "status": "Offline",
     }
-    _rooms.append(room)
+    rooms = load_rooms()
+    rooms.append(room)
+    save_rooms(rooms)
     return jsonify(room), 201
 
 
@@ -61,7 +58,8 @@ def create_room():
 @require_auth
 def get_room(room_id):
     """Get Zoom Room by ID."""
-    room = next((r for r in _rooms if r.get("id") == room_id), None)
+    rooms = load_rooms()
+    room = next((r for r in rooms if r.get("id") == room_id), None)
     if not room:
         return jsonify({"error": {"code": "404", "message": "Room not found"}}), 404
     return jsonify(room)
@@ -72,13 +70,16 @@ def get_room(room_id):
 def update_room(room_id):
     """Update Zoom Room. Body: name, calendar_name, status."""
     data = request.get_json() or {}
-    room = next((r for r in _rooms if r.get("id") == room_id), None)
-    if not room:
+    rooms = load_rooms()
+    idx = next((i for i, r in enumerate(rooms) if r.get("id") == room_id), None)
+    if idx is None:
         return jsonify({"error": {"code": "404", "message": "Room not found"}}), 404
-    out = dict(room)
+    out = dict(rooms[idx])
     for key in ("name", "calendar_name", "status", "location_id"):
         if key in data:
             out[key] = data[key]
+    rooms[idx] = out
+    save_rooms(rooms)
     return jsonify(out), 200
 
 
@@ -86,8 +87,9 @@ def update_room(room_id):
 @require_auth
 def delete_room(room_id):
     """Delete Zoom Room."""
-    global _rooms
-    _rooms = [r for r in _rooms if r.get("id") != room_id]
+    rooms = load_rooms()
+    rooms = [r for r in rooms if r.get("id") != room_id]
+    save_rooms(rooms)
     return "", 204
 
 
@@ -95,7 +97,8 @@ def delete_room(room_id):
 @require_auth
 def list_room_meetings(room_id):
     """List meetings for a Zoom Room. Query: from, to."""
-    room = next((r for r in _rooms if r.get("id") == room_id), None)
+    rooms = load_rooms()
+    room = next((r for r in rooms if r.get("id") == room_id), None)
     if not room:
         return jsonify({"error": {"code": "404", "message": "Room not found"}}), 404
     return jsonify({"meetings": [], "room_id": room_id})
@@ -106,7 +109,8 @@ def list_room_meetings(room_id):
 def create_room_meeting(room_id):
     """Create a meeting for a Zoom Room. Body: topic, start_time, duration."""
     data = request.get_json() or {}
-    room = next((r for r in _rooms if r.get("id") == room_id), None)
+    rooms = load_rooms()
+    room = next((r for r in rooms if r.get("id") == room_id), None)
     if not room:
         return jsonify({"error": {"code": "404", "message": "Room not found"}}), 404
     meeting_id = generate_random_string(22)

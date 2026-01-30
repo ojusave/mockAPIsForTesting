@@ -1,12 +1,11 @@
+"""Zoom QSS (Quality Scoring) API. Source of truth: data/qss_feedback.json."""
 from flask import Blueprint, jsonify, request
 from helpers import generate_random_string
 from models.auth import require_auth
+from data_store import load_qss_feedback, save_qss_feedback
 import random
 
 qss_bp = Blueprint("qss", __name__)
-
-# In-memory store for mock feedback (Zoom Quality Scoring / QSS)
-_feedback_store = {}
 
 def generate_qos_details():
     """Generate random QoS metrics"""
@@ -71,30 +70,36 @@ def submit_qss_feedback():
     """Submit quality feedback (Zoom QSS)."""
     data = request.get_json() or {}
     feedback_id = generate_random_string(22)
-    _feedback_store[feedback_id] = {
+    entry = {
         "id": feedback_id,
         "meeting_id": data.get("meeting_id", ""),
         "rating": data.get("rating"),
         "comments": data.get("comments", ""),
         "created_at": data.get("created_at"),
     }
-    return jsonify(_feedback_store[feedback_id]), 201
+    feedback = load_qss_feedback()
+    feedback[feedback_id] = entry
+    save_qss_feedback(feedback)
+    return jsonify(entry), 201
 
 
 @qss_bp.route("/qss/feedback/<feedback_id>", methods=["GET"])
 @require_auth
 def get_qss_feedback(feedback_id):
     """Get specific feedback by ID."""
-    if feedback_id not in _feedback_store:
+    feedback = load_qss_feedback()
+    if feedback_id not in feedback:
         return jsonify({"error": {"code": "404", "message": "Feedback not found"}}), 404
-    return jsonify(_feedback_store[feedback_id])
+    return jsonify(feedback[feedback_id])
 
 
 @qss_bp.route("/qss/feedback/<feedback_id>", methods=["DELETE"])
 @require_auth
 def delete_qss_feedback(feedback_id):
     """Delete specific feedback."""
-    _feedback_store.pop(feedback_id, None)
+    feedback = load_qss_feedback()
+    feedback.pop(feedback_id, None)
+    save_qss_feedback(feedback)
     return "", 204
 
 

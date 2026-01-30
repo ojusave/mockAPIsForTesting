@@ -1,18 +1,12 @@
 """
-Zoom Tracking Fields API. Mirrors Zoom REST (developers.zoom.us/docs/api/).
-Account-level tracking fields for registration/meetings.
+Zoom Tracking Fields API. Source of truth: data/tracking_fields.json.
 """
 from flask import Blueprint, jsonify, request
 from models.auth import require_auth
 from helpers import generate_random_string
+from data_store import load_tracking_fields, save_tracking_fields
 
 tracking_fields_bp = Blueprint("tracking_fields", __name__)
-
-# In-memory mock; replace with data_store if you need persistence
-_tracking_fields = [
-    {"id": "tf1", "field": "field1", "value": "value1", "visible": True},
-    {"id": "tf2", "field": "field2", "value": "value2", "visible": True},
-]
 
 
 @tracking_fields_bp.route("/tracking_fields", methods=["GET"])
@@ -21,9 +15,10 @@ def list_tracking_fields():
     """List tracking fields. Query: page_size, next_page_token."""
     page_size = min(int(request.args.get("page_size", 30)), 300)
     page_number = max(1, int(request.args.get("page_number", 1)))
-    total = len(_tracking_fields)
+    fields = load_tracking_fields()
+    total = len(fields)
     start = (page_number - 1) * page_size
-    page = _tracking_fields[start : start + page_size]
+    page = fields[start : start + page_size]
     return jsonify({
         "tracking_fields": page,
         "page_size": page_size,
@@ -39,7 +34,9 @@ def create_tracking_field():
     data = request.get_json() or {}
     field_id = generate_random_string(16)
     entry = {"id": field_id, "field": data.get("field", ""), "value": data.get("value", ""), "visible": data.get("visible", True)}
-    _tracking_fields.append(entry)
+    fields = load_tracking_fields()
+    fields.append(entry)
+    save_tracking_fields(fields)
     return jsonify(entry), 201
 
 
@@ -47,7 +44,8 @@ def create_tracking_field():
 @require_auth
 def get_tracking_field(field_id):
     """Get tracking field by ID."""
-    entry = next((f for f in _tracking_fields if f.get("id") == field_id), None)
+    fields = load_tracking_fields()
+    entry = next((f for f in fields if f.get("id") == field_id), None)
     if not entry:
         return jsonify({"error": {"code": "404", "message": "Tracking field not found"}}), 404
     return jsonify(entry)
@@ -58,13 +56,16 @@ def get_tracking_field(field_id):
 def update_tracking_field(field_id):
     """Update tracking field. Body: field, value, visible."""
     data = request.get_json() or {}
-    entry = next((f for f in _tracking_fields if f.get("id") == field_id), None)
-    if not entry:
+    fields = load_tracking_fields()
+    idx = next((i for i, f in enumerate(fields) if f.get("id") == field_id), None)
+    if idx is None:
         return jsonify({"error": {"code": "404", "message": "Tracking field not found"}}), 404
-    out = dict(entry)
+    out = dict(fields[idx])
     for key in ("field", "value", "visible"):
         if key in data:
             out[key] = data[key]
+    fields[idx] = out
+    save_tracking_fields(fields)
     return jsonify(out), 200
 
 
@@ -72,6 +73,7 @@ def update_tracking_field(field_id):
 @require_auth
 def delete_tracking_field(field_id):
     """Delete tracking field."""
-    global _tracking_fields
-    _tracking_fields = [f for f in _tracking_fields if f.get("id") != field_id]
+    fields = load_tracking_fields()
+    fields = [f for f in fields if f.get("id") != field_id]
+    save_tracking_fields(fields)
     return "", 204

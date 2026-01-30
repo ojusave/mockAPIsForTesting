@@ -1,0 +1,22 @@
+{
+  "uuid": "n1Y2w9xW989u9UeqpWIA0B",
+  "id": "n1Y2w9xW989u9UeqpWIA0B",
+  "host_id": "u1",
+  "topic": "T",
+  "type": 2,
+  "start_time": "2026-01-31T23:37:07Z",
+  "duration": 30,
+  "timezone": "America/New_York",
+  "agenda": "",
+  "created_at": "2026-01-30T23:37:07Z",
+  "join_url": "https://api.zoom.us/j/n1Y2w9xW989u9UeqpWIA0B",
+  "start_url": "https://api.zoom.us/s/n1Y2w9xW989u9UeqpWIA0B",
+  "password": "LpLKKI",
+  "settings": {
+    "host_video": true,
+    "participant_video": false,
+    "join_before_host": false,
+    "mute_upon_entry": true,
+    "waiting_room": true
+  }
+}

@@ -1,25 +1,22 @@
 """
-Zoom-style data store. API data is read from the data/ directory and/or in-memory store.
-- data/users/<id>.json   → full user profile + meeting_ids, recording refs
+Zoom-style data store. The source of truth for all data is the data/ directory only.
+- data/accounts.json       → account list
+- data/users/<id>.json     → full user profile + meeting_ids, recording refs
 - data/meetings/<id>.json → meeting details + summary + vtt_data + recording_files + participants
 - data/webinars/<id>.json → webinar details + participants
+- data/tracking_fields.json, data/rooms.json, data/chat_*.json, data/qss_feedback.json
 
-Any ID requested that is not in file or memory gets a generated mock entity (stored in memory)
-so that "whatever they input returns a result" for mock testing.
-Creates (POST) persist to memory and optionally to file.
+All reads and writes go to data/; no in-memory source of truth.
 """
 import os
 import json
-import datetime
-from config import BASE_URL, DATA_DIR, DATA_ACCOUNTS, DATA_USERS_DIR, DATA_MEETINGS_DIR, DATA_WEBINARS_DIR
+from config import (
+    BASE_URL, DATA_DIR, DATA_ACCOUNTS, DATA_USERS_DIR, DATA_MEETINGS_DIR, DATA_WEBINARS_DIR,
+    DATA_TRACKING_FIELDS, DATA_ROOMS, DATA_CHAT_CHANNELS, DATA_CHAT_MESSAGES, DATA_QSS_FEEDBACK,
+)
 
 _accounts_cache = None
 _user_ids_cache = None
-
-# In-memory store for created/generated entities (any input returns a result)
-_memory_users = {}
-_memory_meetings = {}
-_memory_webinars = {}
 
 
 def _load_json(path, default=None):
@@ -44,100 +41,6 @@ def _list_json_files(dir_path):
     ]
 
 
-def _build_mock_meeting(meeting_id, host_id="mock_host"):
-    """Build a full mock meeting (summary, vtt_data, recording_files, participants) for any ID."""
-    now = datetime.datetime.utcnow()
-    start = (now - datetime.timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    rec_id = f"rec_{meeting_id}"
-    return {
-        "uuid": meeting_id,
-        "id": meeting_id,
-        "host_id": host_id,
-        "host_email": f"{host_id}@zoom-mock.com",
-        "topic": f"Meeting {meeting_id}",
-        "type": 2,
-        "start_time": start,
-        "duration": 60,
-        "timezone": "America/New_York",
-        "created_at": start,
-        "join_url": f"{BASE_URL}/j/{meeting_id}",
-        "start_url": f"{BASE_URL}/s/{meeting_id}",
-        "password": "mock123",
-        "agenda": "",
-        "settings": {"host_video": True, "participant_video": False, "mute_upon_entry": True, "waiting_room": True},
-        "summary": {
-            "summary_title": f"Meeting {meeting_id}",
-            "summary_overview": "Mock summary for testing.",
-            "summary_details": ["Point 1", "Point 2"],
-            "next_steps": ["Follow up"],
-        },
-        "vtt_data": f"WEBVTT\n\n00:00:00 --> 00:01:00 Speaker: Mock transcript for {meeting_id}.",
-        "recording_files": [
-            {
-                "id": rec_id,
-                "meeting_id": meeting_id,
-                "recording_start": start,
-                "recording_end": start,
-                "file_type": "MP4",
-                "file_extension": "MP4",
-                "file_size": 1000000,
-                "play_url": f"{BASE_URL}/rec/play/{rec_id}",
-                "download_url": f"{BASE_URL}/rec/download/{meeting_id}/transcript.vtt",
-                "status": "completed",
-            }
-        ],
-        "participants": [
-            {"id": f"p_{meeting_id}", "name": "Participant", "user_id": host_id, "user_email": f"{host_id}@zoom-mock.com", "join_time": start, "leave_time": start, "duration": 3600}
-        ],
-    }
-
-
-def get_or_create_mock_user(user_id):
-    """Return a mock user for any ID; store in memory so subsequent GETs are consistent."""
-    from helpers import generate_base_user_data
-    data = generate_base_user_data()
-    data["id"] = user_id
-    data["email"] = data.get("email") or f"{user_id}@zoom-mock.com"
-    data["meeting_ids"] = [f"{user_id}_m1"]
-    data["recording_meeting_ids"] = [f"{user_id}_m1"]
-    data["webinar_ids"] = [f"{user_id}_w1"]
-    _memory_users[user_id] = data
-    global _user_ids_cache
-    _user_ids_cache = None
-    return data
-
-
-def get_or_create_mock_meeting(meeting_id, host_id=None):
-    """Return a mock meeting for any ID; store in memory. Infers host from id when e.g. user_id_m1."""
-    if host_id is None and meeting_id.endswith("_m1"):
-        host_id = meeting_id[:-3]
-    m = _build_mock_meeting(meeting_id, host_id=host_id or "mock_host")
-    _memory_meetings[meeting_id] = m
-    return m
-
-
-def get_or_create_mock_webinar(webinar_id, host_id=None):
-    """Return a mock webinar for any ID; store in memory."""
-    host_id = host_id or "mock_host"
-    now = datetime.datetime.utcnow()
-    start = (now - datetime.timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    w = {
-        "uuid": webinar_id,
-        "id": webinar_id,
-        "host_id": host_id,
-        "topic": f"Webinar {webinar_id}",
-        "type": 5,
-        "start_time": start,
-        "duration": 60,
-        "timezone": "America/New_York",
-        "created_at": start,
-        "join_url": f"{BASE_URL}/w/{webinar_id}",
-        "participants": [{"id": f"wp_{webinar_id}", "name": "Attendee", "user_id": host_id}],
-    }
-    _memory_webinars[webinar_id] = w
-    return w
-
-
 # ---- Accounts (Zoom account structure) ----
 def load_accounts():
     """Load accounts list from data/accounts.json."""
@@ -160,37 +63,29 @@ def get_account(account_id):
     return None
 
 
-# ---- Users (full Zoom user profile per file + in-memory) ----
+# ---- Users (source of truth: data/users/) ----
 def list_user_ids():
-    """List all user ids (from data/users/ files + in-memory store)."""
+    """List all user ids from data/users/."""
     global _user_ids_cache
     if _user_ids_cache is not None:
         return _user_ids_cache
-    file_ids = _list_json_files(DATA_USERS_DIR)
-    _user_ids_cache = sorted(set(file_ids) | set(_memory_users.keys()))
+    _user_ids_cache = sorted(_list_json_files(DATA_USERS_DIR))
     return _user_ids_cache
 
 
 def load_user(user_id):
-    """
-    Load user: in-memory first, then data/users/<user_id>.json.
-    If not found, create and store a mock user for that ID (any input returns a result).
-    """
-    if user_id in _memory_users:
-        return dict(_memory_users[user_id])
+    """Load user from data/users/<user_id>.json. Returns None if not found."""
     path = os.path.join(DATA_USERS_DIR, f"{user_id}.json")
-    if os.path.isfile(path):
-        data = _load_json(path)
-        if data:
-            return data
-    return get_or_create_mock_user(user_id)
+    if not os.path.isfile(path):
+        return None
+    data = _load_json(path)
+    return data if data else None
 
 
 def save_user(user_id, payload):
-    """Persist user to in-memory store and optionally to file (data/users/<id>.json)."""
+    """Persist user to data/users/<id>.json (source of truth)."""
     payload = dict(payload)
     payload["id"] = user_id
-    _memory_users[user_id] = payload
     os.makedirs(DATA_USERS_DIR, exist_ok=True)
     path = os.path.join(DATA_USERS_DIR, f"{user_id}.json")
     with open(path, "w", encoding="utf-8") as f:
@@ -200,8 +95,10 @@ def save_user(user_id, payload):
 
 
 def add_meeting_to_user(user_id, meeting_id):
-    """Add a meeting_id to user's meeting_ids and recording_meeting_ids (used after creating a meeting)."""
+    """Add a meeting_id to user's meeting_ids and recording_meeting_ids. User must exist in data/users/."""
     u = load_user(user_id)
+    if not u:
+        return
     u = dict(u)
     mids = list(u.get("meeting_ids") or [])
     if meeting_id not in mids:
@@ -214,33 +111,26 @@ def add_meeting_to_user(user_id, meeting_id):
     save_user(user_id, u)
 
 
-# ---- Meetings (Zoom meeting + summary + vtt + recording_files + participants) ----
+# ---- Meetings (source of truth: data/meetings/) ----
 def list_meeting_ids():
-    """List all meeting ids (from data/meetings/ files + in-memory store)."""
-    return sorted(set(_list_json_files(DATA_MEETINGS_DIR)) | set(_memory_meetings.keys()))
+    """List all meeting ids from data/meetings/."""
+    return sorted(_list_json_files(DATA_MEETINGS_DIR))
 
 
 def load_meeting(meeting_id):
-    """
-    Load meeting: in-memory first, then data/meetings/<meeting_id>.json.
-    If not found, create and store a mock meeting for that ID (any input returns a result).
-    """
-    if meeting_id in _memory_meetings:
-        return dict(_memory_meetings[meeting_id])
+    """Load meeting from data/meetings/<meeting_id>.json. Returns None if not found."""
     path = os.path.join(DATA_MEETINGS_DIR, f"{meeting_id}.json")
-    if os.path.isfile(path):
-        data = _load_json(path)
-        if data:
-            return data
-    return get_or_create_mock_meeting(meeting_id)
+    if not os.path.isfile(path):
+        return None
+    data = _load_json(path)
+    return data if data else None
 
 
 def save_meeting(meeting_id, payload):
-    """Persist meeting to in-memory store and optionally to file (data/meetings/<id>.json)."""
+    """Persist meeting to data/meetings/<id>.json (source of truth)."""
     payload = dict(payload)
     payload["id"] = meeting_id
     payload["uuid"] = payload.get("uuid") or meeting_id
-    _memory_meetings[meeting_id] = payload
     os.makedirs(DATA_MEETINGS_DIR, exist_ok=True)
     path = os.path.join(DATA_MEETINGS_DIR, f"{meeting_id}.json")
     with open(path, "w", encoding="utf-8") as f:
@@ -373,18 +263,12 @@ def list_webinar_ids():
 
 
 def load_webinar(webinar_id):
-    """
-    Load webinar: in-memory first, then data/webinars/<webinar_id>.json.
-    If not found, create and store a mock webinar for that ID (any input returns a result).
-    """
-    if webinar_id in _memory_webinars:
-        return dict(_memory_webinars[webinar_id])
+    """Load webinar from data/webinars/<webinar_id>.json. Returns None if not found."""
     path = os.path.join(DATA_WEBINARS_DIR, f"{webinar_id}.json")
-    if os.path.isfile(path):
-        data = _load_json(path)
-        if data:
-            return data
-    return get_or_create_mock_webinar(webinar_id)
+    if not os.path.isfile(path):
+        return None
+    data = _load_json(path)
+    return data if data else None
 
 
 def get_webinars_for_user(user_id, from_date=None, to_date=None):
@@ -424,3 +308,82 @@ def get_participants_for_webinar(webinar_id):
     if not w:
         return []
     return w.get("participants") or []
+
+
+# ---- Tracking fields (source of truth: data/tracking_fields.json) ----
+def load_tracking_fields():
+    """Load tracking fields list from data/tracking_fields.json."""
+    data = _load_json(DATA_TRACKING_FIELDS, default={"tracking_fields": []})
+    if isinstance(data, dict) and "tracking_fields" in data:
+        return data["tracking_fields"]
+    return data if isinstance(data, list) else []
+
+
+def save_tracking_fields(fields):
+    """Persist tracking fields to data/tracking_fields.json."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with open(DATA_TRACKING_FIELDS, "w", encoding="utf-8") as f:
+        json.dump({"tracking_fields": fields}, f, indent=2)
+
+
+# ---- Rooms (source of truth: data/rooms.json) ----
+def load_rooms():
+    """Load rooms list from data/rooms.json."""
+    data = _load_json(DATA_ROOMS, default={"rooms": []})
+    if isinstance(data, dict) and "rooms" in data:
+        return data["rooms"]
+    return data if isinstance(data, list) else []
+
+
+def save_rooms(rooms):
+    """Persist rooms to data/rooms.json."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with open(DATA_ROOMS, "w", encoding="utf-8") as f:
+        json.dump({"rooms": rooms}, f, indent=2)
+
+
+# ---- Chat (source of truth: data/chat_channels.json, data/chat_messages.json) ----
+def load_chat_channels():
+    """Load chat channels from data/chat_channels.json. Returns dict id -> channel."""
+    data = _load_json(DATA_CHAT_CHANNELS, default={"channels": {}})
+    if isinstance(data, dict) and "channels" in data:
+        return data["channels"]
+    return data if isinstance(data, dict) else {}
+
+
+def save_chat_channels(channels):
+    """Persist chat channels to data/chat_channels.json. channels: dict id -> channel."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with open(DATA_CHAT_CHANNELS, "w", encoding="utf-8") as f:
+        json.dump({"channels": channels}, f, indent=2)
+
+
+def load_chat_messages():
+    """Load all chat messages from data/chat_messages.json. Returns dict channel_id -> list of messages."""
+    data = _load_json(DATA_CHAT_MESSAGES, default={"messages": {}})
+    if isinstance(data, dict) and "messages" in data:
+        return data["messages"]
+    return data if isinstance(data, dict) else {}
+
+
+def save_chat_messages(messages):
+    """Persist chat messages to data/chat_messages.json. messages: dict channel_id -> list."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with open(DATA_CHAT_MESSAGES, "w", encoding="utf-8") as f:
+        json.dump({"messages": messages}, f, indent=2)
+
+
+# ---- QSS feedback (source of truth: data/qss_feedback.json) ----
+def load_qss_feedback():
+    """Load QSS feedback from data/qss_feedback.json. Returns dict id -> feedback."""
+    data = _load_json(DATA_QSS_FEEDBACK, default={"feedback": {}})
+    if isinstance(data, dict) and "feedback" in data:
+        return data["feedback"]
+    return data if isinstance(data, dict) else {}
+
+
+def save_qss_feedback(feedback):
+    """Persist QSS feedback to data/qss_feedback.json. feedback: dict id -> entry."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with open(DATA_QSS_FEEDBACK, "w", encoding="utf-8") as f:
+        json.dump({"feedback": feedback}, f, indent=2)

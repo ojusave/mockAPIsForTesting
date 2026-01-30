@@ -1,0 +1,32 @@
+{
+  "feedback": {
+    "5BQ4YQHoLWeCYOQ756TS63": {
+      "id": "5BQ4YQHoLWeCYOQ756TS63",
+      "meeting_id": "m1",
+      "rating": 5,
+      "comments": "",
+      "created_at": null
+    },
+    "aVYPLIPjHzX2l6Vj7DQnaq": {
+      "id": "aVYPLIPjHzX2l6Vj7DQnaq",
+      "meeting_id": "OoaNM5G0b7ZOAYI7xid3oV",
+      "rating": 5,
+      "comments": "",
+      "created_at": null
+    },
+    "PbUn3Bfcxb7nKPewhXV0iw": {
+      "id": "PbUn3Bfcxb7nKPewhXV0iw",
+      "meeting_id": "JTVVc36MAr8UyfO5CmUmZV",
+      "rating": 5,
+      "comments": "",
+      "created_at": null
+    },
+    "8F5LBCxyBFTic4oWzpCNN1": {
+      "id": "8F5LBCxyBFTic4oWzpCNN1",
+      "meeting_id": "JTVVc36MAr8UyfO5CmUmZV",
+      "rating": 5,
+      "comments": "",
+      "created_at": null
+    }
+  }
+}

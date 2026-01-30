@@ -1,0 +1,18 @@
+{
+  "id": "dwj4cywZDE580o0K9OQaSF",
+  "first_name": "Patched",
+  "last_name": "User",
+  "email": "delete-me@zoom-mock.com",
+  "type": 1,
+  "created_at": "2026-01-30T23:36:07Z",
+  "status": "pending",
+  "display_name": "Del User",
+  "meeting_ids": [
+    "OoaNM5G0b7ZOAYI7xid3oV",
+    "PkohUI7GqjYg9AfKu5O86t"
+  ],
+  "recording_meeting_ids": [
+    "OoaNM5G0b7ZOAYI7xid3oV",
+    "PkohUI7GqjYg9AfKu5O86t"
+  ]
+}
