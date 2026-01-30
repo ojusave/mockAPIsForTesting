@@ -1,0 +1,15 @@
+{
+  "accounts": [
+    {
+      "id": "acct_zoom_mock_001",
+      "account_name": "Zoom Mock Company",
+      "owner_email": "admin@zoom-mock.com",
+      "owner_id": "u1",
+      "account_type": "2",
+      "seats": 100,
+      "subscription_start_time": "2024-01-01T00:00:00Z",
+      "subscription_end_time": "2027-12-31T23:59:59Z",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  ]
+}

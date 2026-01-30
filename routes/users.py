@@ -1,188 +1,167 @@
-from flask import Blueprint, jsonify, request, current_app
-from helpers import generate_base_user_data
+from flask import Blueprint, jsonify, request
+from helpers import generate_user_id
+from config import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
+from models.auth import require_auth
+from cache_config import cache
+from data_store import list_user_ids, load_user
 import random
 import os
 from datetime import datetime, timedelta
-from models.auth import require_auth
-from cache_config import cache
 
-users_bp = Blueprint('users', __name__)
+users_bp = Blueprint("users", __name__)
 
-@users_bp.route('/users', methods=['GET'])
+
+@users_bp.route("/users", methods=["GET"])
 @require_auth
-@cache.cached(timeout=3600, key_prefix='list_users')
 def get_data():
-
-    total_records = random.randint(5000, 10000)
-    page_size = 30
-    page_number = random.randint(1, total_records // page_size)
-
-    base_users = [generate_base_user_data() for _ in range(page_size)]
-
+    """List users from data/users/ (Zoom-style). Query: page_size, page_number, status."""
+    page_size = min(int(request.args.get("page_size", DEFAULT_PAGE_SIZE)), MAX_PAGE_SIZE)
+    page_number = max(1, int(request.args.get("page_number", 1)))
+    status_filter = request.args.get("status")
+    all_ids = list_user_ids()
+    users = []
+    for uid in all_ids:
+        u = load_user(uid)
+        if not u:
+            continue
+        if status_filter and status_filter in ("active", "inactive", "pending") and u.get("status") != status_filter:
+            continue
+        users.append(u)
+    total_records = len(users)
+    start = (page_number - 1) * page_size
+    page_users = users[start : start + page_size]
     response_data = {
-        "next_page_token": os.urandom(16).hex(),
-        "page_count": total_records // page_size + (1 if total_records % page_size > 0 else 0),
+        "next_page_token": os.urandom(16).hex() if start + page_size < total_records else "",
+        "page_count": max(1, (total_records + page_size - 1) // page_size),
         "page_number": page_number,
         "page_size": page_size,
         "total_records": total_records,
-        "users": base_users
+        "users": page_users,
     }
-
     return jsonify(response_data)
 
-@users_bp.route('/users/<user_id>', methods=['GET'])
+
+@users_bp.route("/users", methods=["POST"])
+@require_auth
+def create_user():
+    """Create a new user (Zoom-style). Accepts: email, first_name, last_name, type, display_name, password."""
+    data = request.get_json() or {}
+    if not data.get("email") or not data.get("first_name") or not data.get("last_name"):
+        return jsonify({
+            "error": {"code": "400", "message": "Validation failed", "details": "email, first_name, last_name are required"}
+        }), 400
+    user_id = data.get("id") or generate_user_id()
+    created = (datetime.utcnow() - timedelta(minutes=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    display = data.get("display_name") or f"{data['first_name']} {data['last_name']}"
+    user = {
+        "id": user_id,
+        "first_name": data["first_name"],
+        "last_name": data["last_name"],
+        "email": data["email"],
+        "type": data.get("type", 1),
+        "created_at": created,
+        "status": "pending",
+        "display_name": display,
+    }
+    if data.get("password") is not None:
+        user["password"] = "[REDACTED]"
+    return jsonify(user), 201
+
+
+@users_bp.route("/users/<user_id>", methods=["DELETE"])
+@require_auth
+def delete_user(user_id):
+    """Delete a user (Zoom-style)."""
+    cache.delete_memoized(get_user, user_id)
+    cache.delete("list_users")
+    return "", 204
+
+@users_bp.route("/users/<user_id>", methods=["GET"])
 @cache.memoize(timeout=3600)
 @require_auth
 def get_user(user_id):
-    """Get detailed user information"""
-    # Generate random dates within reasonable range
-    created_date = datetime.utcnow() - timedelta(days=random.randint(100, 1000))
-    last_login = datetime.utcnow() - timedelta(hours=random.randint(1, 240))
-    
-    # List of possible values for random selection
-    roles = ["Admin", "Member", "Owner"]
-    timezones = ["Asia/Shanghai", "America/New_York", "Europe/London", "Australia/Sydney"]
-    languages = ["en-US", "fr-FR", "es-ES", "de-DE"]
-    locations = ["Paris", "New York", "London", "Tokyo", "Sydney"]
-    client_versions = ["5.9.6.4993(mac)", "5.9.6.4785(windows)", "5.9.7.1234(linux)"]
-    
-    # Mock user data with random values
-    user = {
-        "id": user_id,
-        "created_at": created_date.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "dept": "Developers",
-        "email": f"user{random.randint(1000,9999)}@example.com",
-        "first_name": random.choice(["John", "Jane", "Mike", "Sarah", "David"]),
-        "last_client_version": random.choice(client_versions),
-        "last_login_time": last_login.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "last_name": random.choice(["Smith", "Johnson", "Williams", "Brown", "Jones"]),
-        "pmi": random.randint(1000000000, 9999999999),
-        "role_name": random.choice(roles),
-        "timezone": random.choice(timezones),
-        "type": random.randint(1, 3),
-        "use_pmi": random.choice([True, False]),
-        "account_id": os.urandom(8).hex(),
-        "account_number": random.randint(10000000, 99999999),
-        "cms_user_id": os.urandom(10).hex(),
-        "company": "Example Corp",
-        "user_created_at": created_date.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "custom_attributes": [
-            {
-                "key": os.urandom(12).hex(),
-                "name": f"Attribute_{random.randint(1,5)}",
-                "value": str(random.randint(1, 100))
-            }
-        ],
-        "employee_unique_id": os.urandom(10).hex(),
-        "group_ids": [os.urandom(8).hex() for _ in range(random.randint(1, 3))],
-        "im_group_ids": [os.urandom(8).hex() for _ in range(random.randint(1, 3))],
-        "jid": f"user{random.randint(1000,9999)}@example.com",
-        "job_title": "Software Engineer",
-        "cost_center": f"CC-{random.randint(100,999)}",
-        "language": random.choice(languages),
-        "location": random.choice(locations),
-        "login_types": [random.randint(100, 105) for _ in range(random.randint(1, 3))],
-        "manager": f"manager{random.randint(100,999)}@example.com",
-        "personal_meeting_url": f"https://zoom.us/j/{random.randint(1000000000, 9999999999)}",
-        "phone_country": "US",
-        "phone_number": f"+1 {random.randint(100,999)}{random.randint(100,999)}{random.randint(1000,9999)}",
-        "phone_numbers": [
-            {
-                "code": "+1",
-                "country": "US",
-                "label": "Mobile",
-                "number": f"{random.randint(100,999)}{random.randint(1000,9999)}",
-                "verified": random.choice([True, False])
-            }
-        ],
-        "pic_url": f"https://example.com/photos/{os.urandom(8).hex()}.jpg",
-        "plan_united_type": str(random.randint(1, 5)),
-        "pronouns": str(random.randint(1000, 9999)),
-        "pronouns_option": random.randint(1, 3),
-        "role_id": str(random.randint(0, 5)),
-        "status": random.choice(["active", "pending", "inactive"]),
-        "vanity_url": f"https://zoom.us/{os.urandom(8).hex()}",
-        "verified": random.randint(0, 1),
-        "cluster": f"us{random.randint(1,10):02d}",
-        "zoom_one_type": random.randint(32, 128)
-    }
-    
-    # Add display_name by combining first and last name
-    user["display_name"] = f"{user['first_name']} {user['last_name']}"
-    
+    """Get user from data/users/<user_id>.json (Zoom-style). Returns 404 if not found."""
+    user = load_user(user_id)
+    if not user:
+        return jsonify({"error": {"code": "404", "message": "User not found", "details": f"No user with id: {user_id}"}}), 404
+    # Return Zoom user object (exclude internal keys like meeting_ids if desired; Zoom often includes them in profile)
     return jsonify(user)
 
-@users_bp.route('/users/<user_id>/status', methods=['PUT'])
+@users_bp.route("/users/<user_id>/status", methods=["PUT"])
 @require_auth
 def update_user_status(user_id):
-    """Update a user's status (activate/deactivate)"""
-    data = request.get_json()
-    action = data.get('action')
-    
-    if action not in ['activate', 'deactivate', 'clock_in', 'clock_out']:
-        return jsonify({"error": "Invalid action"}), 400
-        
-    # Mock response
-    return jsonify({}), 200
+    """Update a user's status. Body: { \"action\": \"activate\" | \"deactivate\" | \"clock_in\" | \"clock_out\" }."""
+    data = request.get_json() or {}
+    action = data.get("action")
+    if not action:
+        return jsonify({"error": {"code": "400", "message": "Validation failed", "details": "action is required"}}), 400
+    if action not in ("activate", "deactivate", "clock_in", "clock_out"):
+        return jsonify({"error": {"code": "400", "message": "Invalid action", "details": "action must be one of: activate, deactivate, clock_in, clock_out"}}), 400
+    return jsonify({"id": user_id, "status": "active" if action == "activate" else "inactive"}), 200
 
-@users_bp.route('/users/<user_id>/token', methods=['GET'])
+
+@users_bp.route("/users/<user_id>/token", methods=["GET"])
 @require_auth
 def get_user_token(user_id):
-    """Get a user's Zoom token or ZAK"""
-    token_type = request.args.get('type', 'token')
-    ttl = request.args.get('ttl', 7200)
-    
-    if token_type not in ['token', 'zak']:
-        return jsonify({"error": "Invalid token type"}), 400
-        
-    # Mock response
-    response = {
-        "token": "6IjAwMDAwMSIsInptX3NrbSI6InptX" 
-    }
+    """Get a user's Zoom token or ZAK. Query: type=token|zak, ttl=seconds."""
+    token_type = request.args.get("type", "token")
+    ttl = int(request.args.get("ttl", 7200))
+    if token_type not in ("token", "zak"):
+        return jsonify({"error": {"code": "400", "message": "Invalid token type", "details": "type must be token or zak"}}), 400
+    response = {"token": "6IjAwMDAwMSIsInptX3NrbSI6InptX", "type": token_type}
+    if ttl:
+        response["ttl"] = ttl
     return jsonify(response)
 
-@users_bp.route('/users/<user_id>/token', methods=['DELETE']) 
+@users_bp.route("/users/<user_id>/token", methods=["DELETE"]) 
 @require_auth
 def revoke_user_token(user_id):
     """Revoke a user's SSO token"""
     # Mock response - return 204 for successful deletion
     return '', 204
 
-@users_bp.route('/users/<user_id>/settings/virtual_backgrounds', methods=['POST'])
+@users_bp.route("/users/<user_id>/settings/virtual_backgrounds", methods=["POST"])
 @require_auth
 def upload_virtual_background(user_id):
-    """Upload virtual background files for a user"""
-    if 'file' not in request.files:
-        return jsonify({"error": "No file uploaded"}), 400
-        
-    file = request.files['file']
-    
-    # Mock response
+    """Upload virtual background. Form: file=...; optional JSON/form: is_default, name, type."""
+    data = request.form or request.get_json() or {}
+    file = request.files.get("file")
+    name = (file.filename if file else None) or data.get("name", "background.png")
+    is_default = data.get("is_default", "true").lower() in ("true", "1", "yes")
+    ftype = data.get("type", "image")
     response = {
         "id": "_l0MP1U7Qn2JgJ4oEJbVZQ",
-        "is_default": True,
-        "name": file.filename,
+        "is_default": is_default,
+        "name": name,
         "size": 7221,
-        "type": "image"
+        "type": ftype,
     }
     return jsonify(response), 201
 
-@users_bp.route('/users/<user_id>/settings/virtual_backgrounds', methods=['DELETE'])
+
+@users_bp.route("/users/<user_id>/settings/virtual_backgrounds", methods=["DELETE"])
 @require_auth
 def delete_virtual_backgrounds(user_id):
-    """Delete virtual background files for a user"""
-    file_ids = request.args.get('file_ids')
-    
+    """Delete virtual background files. Query: file_ids=id1,id2 (comma-separated)."""
+    file_ids = request.args.get("file_ids")
     if not file_ids:
-        return jsonify({"error": "file_ids parameter required"}), 400
-        
-    # Mock response - return 204 for successful deletion
-    return '', 204
+        return jsonify({"error": {"code": "400", "message": "file_ids required", "details": "Query param file_ids (comma-separated) is required"}}), 400
+    return "", 204
 
-@users_bp.route('/users/<user_id>', methods=['PATCH'])
+@users_bp.route("/users/<user_id>", methods=["PATCH"])
 @require_auth
 def update_user(user_id):
-    # After updating user
+    """Update user. Body merged into profile from data/users/<user_id>.json; 404 if user not in data."""
+    data = request.get_json() or {}
     cache.delete_memoized(get_user, user_id)
-    cache.delete('list_users')
-    # ... rest of the code
+    base = load_user(user_id)
+    if not base:
+        return jsonify({"error": {"code": "404", "message": "User not found", "details": f"No user with id: {user_id}"}}), 404
+    base = dict(base)
+    allowed = ("first_name", "last_name", "display_name", "timezone", "language", "dept", "phone_number", "type", "company", "job_title", "phone_country")
+    for key in allowed:
+        if key in data:
+            base[key] = data[key]
+    if "first_name" in data or "last_name" in data:
+        base["display_name"] = base.get("display_name") or f"{base.get('first_name', '')} {base.get('last_name', '')}"
+    return jsonify(base), 200

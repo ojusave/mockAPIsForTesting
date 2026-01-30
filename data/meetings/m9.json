@@ -1,0 +1,86 @@
+{
+  "uuid": "m9",
+  "id": "m9",
+  "host_id": "u3",
+  "host_email": "u3@zoom-mock.com",
+  "topic": "Customer Service Improvement Meeting",
+  "type": 2,
+  "start_time": "2026-01-15T14:00:00Z",
+  "duration": 60,
+  "timezone": "America/New_York",
+  "created_at": "2026-01-01T00:00:00Z",
+  "join_url": "https://api.zoom.us/j/m9",
+  "start_url": "https://api.zoom.us/s/m9",
+  "password": "abc123",
+  "agenda": "The team discussed recent customer feedback and developed a plan to improve service quality.",
+  "settings": {
+    "host_video": true,
+    "participant_video": false,
+    "join_before_host": false,
+    "mute_upon_entry": true,
+    "waiting_room": true,
+    "meeting_authentication": false
+  },
+  "summary": {
+    "summary_title": "Customer Service Improvement Meeting",
+    "summary_overview": "The team discussed recent customer feedback and developed a plan to improve service quality.",
+    "summary_details": [
+      "Emma opened with the agenda focused on service improvements.",
+      "Jack presented key customer feedback issues.",
+      "The team brainstormed solutions to enhance response times."
+    ],
+    "next_steps": [
+      "Implement changes to the customer service process.",
+      "Schedule another review meeting."
+    ]
+  },
+  "vtt_data": "WEBVTT\n\n00:00:00 --> 00:00:07 Emma: Good morning team, today we\u2019ll be focusing on our customer service improvement plan. 00:00:07 --> 00:00:15 Jack: Right, we\u2019ve been receiving a lot of feedback recently. Let\u2019s dive into the core issues.",
+  "recording_files": [
+    {
+      "id": "266e79a7-9f8b-4508-b50c-155cb6b98036",
+      "meeting_id": "m9",
+      "recording_start": "2026-01-15T14:00:00Z",
+      "recording_end": "2026-01-15T15:00:00Z",
+      "file_type": "TRANSCRIPT",
+      "file_extension": "VTT",
+      "file_size": 237,
+      "play_url": "https://api.zoom.us/rec/play/266e79a7",
+      "download_url": "https://api.zoom.us/rec/download/m9/transcript.vtt",
+      "status": "completed",
+      "recording_type": "shared_screen_with_speaker_view"
+    },
+    {
+      "id": "ded0f0ad-0f5f-4ce9-be50-0b05ce26b664",
+      "meeting_id": "m9",
+      "recording_start": "2026-01-15T14:00:00Z",
+      "recording_end": "2026-01-15T15:00:00Z",
+      "file_type": "MP4",
+      "file_extension": "MP4",
+      "file_size": 50000000,
+      "play_url": "https://api.zoom.us/rec/play/ded0f0ad",
+      "download_url": "https://api.zoom.us/rec/download/m9/recording.mp4",
+      "status": "completed",
+      "recording_type": "shared_screen_with_speaker_view"
+    }
+  ],
+  "participants": [
+    {
+      "id": "p1",
+      "name": "Alice Chen",
+      "user_id": "u1",
+      "user_email": "alice.chen@zoom-mock.com",
+      "join_time": "2026-01-15T14:00:00Z",
+      "leave_time": "2026-01-15T15:00:00Z",
+      "duration": 3600
+    },
+    {
+      "id": "p2",
+      "name": "Bob Martinez",
+      "user_id": "u2",
+      "user_email": "bob.martinez@zoom-mock.com",
+      "join_time": "2026-01-15T14:00:00Z",
+      "leave_time": "2026-01-15T15:00:00Z",
+      "duration": 3600
+    }
+  ]
+}

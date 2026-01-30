@@ -67,9 +67,9 @@ def get_calendar_acl(cal_id):
 def create_acl_rule(cal_id):
     """Create a new ACL rule"""
 
-    data = request.get_json()
-    if not data or 'scope' not in data or 'role' not in data:
-        return jsonify({"error": "Missing required fields"}), 400
+    data = request.get_json() or {}
+    if not data.get("scope") or not data.get("role"):
+        return jsonify({"error": {"code": "400", "message": "Validation failed", "details": "scope and role are required"}}), 400
 
     acl_rule = {
         "kind": "calendar#aclRule",
@@ -130,13 +130,13 @@ def list_user_calendars(user_id):
         calendars.append(generate_calendar_entry())
     return jsonify({"kind": "calendar#calendarList", "items": calendars}), 200
 
-@calendar_bp.route('/calendars', methods=['POST'])
+@calendar_bp.route("/calendars", methods=["POST"])
 @require_auth
 def create_calendar():
-    """Create a new secondary calendar"""
-    data = request.get_json()
-    if not data or 'summary' not in data:
-        return jsonify({"error": "Missing required fields"}), 400
+    """Create calendar. Body: summary (required), description, timeZone, location."""
+    data = request.get_json() or {}
+    if not data.get("summary"):
+        return jsonify({"error": {"code": "400", "message": "Validation failed", "details": "summary is required"}}), 400
 
     new_calendar = {
         "kind": "calendar#calendar",
@@ -170,19 +170,19 @@ def get_calendar(cal_id):
     }
     return jsonify(calendar), 200
 
-@calendar_bp.route('/calendars/<cal_id>', methods=['PATCH'])
+@calendar_bp.route("/calendars/<cal_id>", methods=["PATCH"])
 @require_auth
 def update_calendar(cal_id):
-    """Update the specified calendar"""
-    data = request.get_json()
+    """Update calendar. Body: summary, timeZone, description, location (all optional)."""
+    data = request.get_json() or {}
     updated_calendar = {
         "kind": "calendar#calendar",
         "etag": f"\"{generate_random_string(20)}\"",
         "id": cal_id,
-        "summary": data.get('summary', "Updated calendar"),
-        "timeZone": data.get('timeZone', "America/Los_Angeles"),
-        "description": data.get('description', "Updated description"),
-        "location": data.get('location', "Updated location")
+        "summary": data.get("summary", "Updated calendar"),
+        "timeZone": data.get("timeZone", "America/Los_Angeles"),
+        "description": data.get("description", "Updated description"),
+        "location": data.get("location", "Updated location"),
     }
     return jsonify(updated_calendar), 200
 
@@ -203,8 +203,8 @@ def query_freebusy():
     """Query free/busy information"""
 
     data = request.get_json()
-    if not data or 'timeMin' not in data or 'timeMax' not in data:
-        return jsonify({"error": "Missing required fields"}), 400
+    if not data.get("timeMin") or not data.get("timeMax"):
+        return jsonify({"error": {"code": "400", "message": "Validation failed", "details": "timeMin and timeMax are required"}}), 400
 
     calendars = {}
     for item in data.get('items', []):
@@ -353,14 +353,17 @@ def move_event(cal_id, event_id):
     }
     return jsonify(moved_event), 200
 
-@calendar_bp.route('/calendars/<cal_id>/events', methods=['GET'])
+@calendar_bp.route("/calendars/<cal_id>/events", methods=["GET"])
 @require_auth
 def list_events(cal_id):
-    """List events on the specified calendar"""
+    """List events. Query: timeMin, timeMax (ISO), maxResults, singleEvents, orderBy."""
+    time_min = request.args.get("timeMin")
+    time_max = request.args.get("timeMax")
+    max_results = min(int(request.args.get("maxResults", 250)), 2500)
     events = []
-    for _ in range(random.randint(1, 5)):
-        future_start = datetime.datetime.now() + datetime.timedelta(days=random.randint(1, 30))  # Random future date
-        future_end = future_start + datetime.timedelta(hours=1)  # 1 hour after the start
+    for _ in range(min(random.randint(1, 10), max_results)):
+        future_start = datetime.datetime.now() + datetime.timedelta(days=random.randint(1, 30))
+        future_end = future_start + datetime.timedelta(hours=1)
         events.append({
             "kind": "calendar#event",
             "etag": f"\"{generate_random_string(20)}\"",

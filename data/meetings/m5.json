@@ -1,0 +1,93 @@
+{
+  "uuid": "m5",
+  "id": "m5",
+  "host_id": "u2",
+  "host_email": "u2@zoom-mock.com",
+  "topic": "HR Meeting",
+  "type": 2,
+  "start_time": "2026-01-15T14:00:00Z",
+  "duration": 60,
+  "timezone": "America/New_York",
+  "created_at": "2026-01-01T00:00:00Z",
+  "join_url": "https://api.zoom.us/j/m5",
+  "start_url": "https://api.zoom.us/s/m5",
+  "password": "abc123",
+  "agenda": "The meeting focused on the HR strategy, talent acquisition, and employee engagement. Key discussions involved the establishment of an HR working group, metrics for success, and initiatives to increase",
+  "settings": {
+    "host_video": true,
+    "participant_video": false,
+    "join_before_host": false,
+    "mute_upon_entry": true,
+    "waiting_room": true,
+    "meeting_authentication": false
+  },
+  "summary": {
+    "summary_title": "HR Meeting",
+    "summary_overview": "The meeting focused on the HR strategy, talent acquisition, and employee engagement. Key discussions involved the establishment of an HR working group, metrics for success, and initiatives to increase diversity and inclusion.",
+    "summary_details": [
+      "Sarah opened the meeting and introduced the topic of HR. ",
+      "Emily reviewed the agenda, which included discussing the HR strategy, talent acquisition, and employee engagement.",
+      "James announced that he would present insights on employee development programs.",
+      "James shared the company's training programs and how they inform HR strategy.",
+      "Sarah inquired about how HR success is measured, raising the need for clear metrics and benchmarks.",
+      "Michael highlighted a recent trend in HR: the increased focus on diversity and inclusion.",
+      "James asked how this trend would impact the company's HR strategy and employee engagement, to which Sarah responded that diversity and inclusion can lead to increased employee satisfaction and reduced turnover.",
+      "Emily added that the HR strategy is particularly focused on meeting the needs of employees, and that the company needs to meet their expectations and preferences.",
+      "Michael proposed the formation of an HR working group to further develop HR strategy and track progress. James volunteered to be part of the group, emphasizing the need for a dedicated team focused on HR efforts."
+    ],
+    "next_steps": [
+      "Form an HR working group with representatives from different departments.",
+      "Schedule a follow-up meeting to define the working group's objectives and timeline.",
+      "Develop a comprehensive HR plan with a target for implementation within the next quarter."
+    ]
+  },
+  "vtt_data": "WEBVTT\n\n00:00:00 --> 00:00:05 Sarah: Good morning everyone, welcome to today's HR meeting. 00:00:05 --> 00:00:20 Emily: Thanks Sarah. Before we begin, I'd like to briefly review the agenda for today's discussion. We'll be covering our HR strategy, talent acquisition, and employee engagement. 00:00:20 --> 00:01:00 Michael: I'd like to add that we also have a special guest, James from the training department, who will share some insights on our employee development programs. 00:01:00 --> 00:02:00 James: Hi everyone, thanks for having me. I'll be discussing our training programs and how they inform our HR strategy. 00:02:00 --> 00:04:00 Sarah: I'd like to ask, how do we measure the success of our HR efforts? Are we using any specific metrics or benchmarks? 00:04:00 --> 00:05:00 Emily: Great question, Sarah. That's something we'll be discussing later in the meeting. Michael, can you walk us through some of the recent trends in HR? 00:05:00 --> 00:08:00 Michael: Certainly. One trend we're seeing is the increased focus on diversity and inclusion. Companies are prioritizing creating a more inclusive work environment. 00:08:00 --> 00:10:00 James: That's interesting. How do you think this will impact our company's HR strategy and employee engagement? 00:10:00 --> 00:12:00 Sarah: Well, research has shown that diversity and inclusion can lead to increased employee satisfaction and reduced turnover. It's not just about hiring people, but also about creating a culture that values and respects all employees. 00:12:00 --> 00:15:00 Emily: I'd like to add that our HR strategy is particularly focused on meeting the needs of our employees. We need to ensure we're meeting their expectations and preferences. 00:15:00 --> 00:18:00 Michael: Thank you, Emily. That's an important point. Sarah, can you summarize some of the key takeaways from our discussion so far? 00:18:00 --> 00:20:00 Sarah: Sure. We've covered the HR strategy, talent acquisition, and employee engagement. 00:20:00 --> 00:25:00 James: I'd like to propose that we establish an HR working group to further develop our HR strategy and track progress. 00:25:00 --> 00:28:00 Michael: I agree. It would be beneficial to have a dedicated team focused on HR efforts. 00:28:00 --> 00:30:00 Sarah: Great, let's make that happen. We'll schedule a follow-up meeting to discuss the working group's objectives and timeline. 00:30:00 --> 00:35:00 Emily: Before we adjourn, are there any final questions or comments? 00:35:00 --> 00:40:00 James: Just one question, what's the target timeline for implementing our new HR strategy? 00:40:00 --> 00:45:00 Sarah: We're aiming to have a comprehensive plan in place within the next quarter. 00:45:00 --> 00:50:00 Michael: I think that's ambitious, but achievable. We'll need to work closely together to make it happen. 00:50:00 --> 00:55:00 Sarah: Thank you all for your participation and input today. Let's keep the momentum going and make a positive impact on our employees and work environment.",
+  "recording_files": [
+    {
+      "id": "66283482-8bf3-4d46-9f19-ec5029443820",
+      "meeting_id": "m5",
+      "recording_start": "2026-01-15T14:00:00Z",
+      "recording_end": "2026-01-15T15:00:00Z",
+      "file_type": "TRANSCRIPT",
+      "file_extension": "VTT",
+      "file_size": 3002,
+      "play_url": "https://api.zoom.us/rec/play/66283482",
+      "download_url": "https://api.zoom.us/rec/download/m5/transcript.vtt",
+      "status": "completed",
+      "recording_type": "shared_screen_with_speaker_view"
+    },
+    {
+      "id": "ff599c49-06ec-4dfe-a154-ccdf9ef79e98",
+      "meeting_id": "m5",
+      "recording_start": "2026-01-15T14:00:00Z",
+      "recording_end": "2026-01-15T15:00:00Z",
+      "file_type": "MP4",
+      "file_extension": "MP4",
+      "file_size": 50000000,
+      "play_url": "https://api.zoom.us/rec/play/ff599c49",
+      "download_url": "https://api.zoom.us/rec/download/m5/recording.mp4",
+      "status": "completed",
+      "recording_type": "shared_screen_with_speaker_view"
+    }
+  ],
+  "participants": [
+    {
+      "id": "p1",
+      "name": "Alice Chen",
+      "user_id": "u1",
+      "user_email": "alice.chen@zoom-mock.com",
+      "join_time": "2026-01-15T14:00:00Z",
+      "leave_time": "2026-01-15T15:00:00Z",
+      "duration": 3600
+    },
+    {
+      "id": "p2",
+      "name": "Bob Martinez",
+      "user_id": "u2",
+      "user_email": "bob.martinez@zoom-mock.com",
+      "join_time": "2026-01-15T14:00:00Z",
+      "leave_time": "2026-01-15T15:00:00Z",
+      "duration": 3600
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "uuid": "m10",
+  "id": "m10",
+  "host_id": "u3",
+  "host_email": "u3@zoom-mock.com",
+  "topic": "Sprint Planning Meeting",
+  "type": 2,
+  "start_time": "2026-01-15T14:00:00Z",
+  "duration": 60,
+  "timezone": "America/New_York",
+  "created_at": "2026-01-01T00:00:00Z",
+  "join_url": "https://api.zoom.us/j/m10",
+  "start_url": "https://api.zoom.us/s/m10",
+  "password": "abc123",
+  "agenda": "The team discussed the progress of the current sprint and planned for the next phase of development.",
+  "settings": {
+    "host_video": true,
+    "participant_video": false,
+    "join_before_host": false,
+    "mute_upon_entry": true,
+    "waiting_room": true,
+    "meeting_authentication": false
+  },
+  "summary": {
+    "summary_title": "Sprint Planning Meeting",
+    "summary_overview": "The team discussed the progress of the current sprint and planned for the next phase of development.",
+    "summary_details": [
+      "Luke opened the sprint meeting.",
+      "Sarah reviewed last sprint's outcomes.",
+      "Jason updated the team on backend development."
+    ],
+    "next_steps": [
+      "Continue with the next sprint tasks.",
+      "Ensure backend and frontend coordination."
+    ]
+  },
+  "vtt_data": "WEBVTT\n\n00:00:00 --> 00:00:05 Luke: Welcome to today's engineering sprint planning meeting. 00:00:05 --> 00:00:15 Sarah: Thanks, Luke. Let\u2019s begin by reviewing the progress from the last sprint. 00:00:15 --> 00:00:30 Jason: I\u2019ll provide an update on the backend development for the new feature.",
+  "recording_files": [
+    {
+      "id": "bec22c62-42f2-4197-b095-6832a3b86291",
+      "meeting_id": "m10",
+      "recording_start": "2026-01-15T14:00:00Z",
+      "recording_end": "2026-01-15T15:00:00Z",
+      "file_type": "TRANSCRIPT",
+      "file_extension": "VTT",
+      "file_size": 294,
+      "play_url": "https://api.zoom.us/rec/play/bec22c62",
+      "download_url": "https://api.zoom.us/rec/download/m10/transcript.vtt",
+      "status": "completed",
+      "recording_type": "shared_screen_with_speaker_view"
+    },
+    {
+      "id": "c2c243bb-936b-4aeb-a854-d61330f08082",
+      "meeting_id": "m10",
+      "recording_start": "2026-01-15T14:00:00Z",
+      "recording_end": "2026-01-15T15:00:00Z",
+      "file_type": "MP4",
+      "file_extension": "MP4",
+      "file_size": 50000000,
+      "play_url": "https://api.zoom.us/rec/play/c2c243bb",
+      "download_url": "https://api.zoom.us/rec/download/m10/recording.mp4",
+      "status": "completed",
+      "recording_type": "shared_screen_with_speaker_view"
+    }
+  ],
+  "participants": [
+    {
+      "id": "p1",
+      "name": "Alice Chen",
+      "user_id": "u1",
+      "user_email": "alice.chen@zoom-mock.com",
+      "join_time": "2026-01-15T14:00:00Z",
+      "leave_time": "2026-01-15T15:00:00Z",
+      "duration": 3600
+    },
+    {
+      "id": "p2",
+      "name": "Bob Martinez",
+      "user_id": "u2",
+      "user_email": "bob.martinez@zoom-mock.com",
+      "join_time": "2026-01-15T14:00:00Z",
+      "leave_time": "2026-01-15T15:00:00Z",
+      "duration": 3600
+    }
+  ]
+}

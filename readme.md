@@ -1,205 +1,272 @@
-# Mock APIs
+# Mock Zoom API
 
-## Overview
+A mock API that mirrors [Zoom’s REST API](https://developers.zoom.us/docs/api/) for meetings, users, recordings, calendar, mail, chat, phone, and quality scoring. Uses random but realistic data and 2026-oriented defaults for testing and development.
 
-This project provides mock API endpoints that simulate a meeting summarization and transcription system. The API mimics functionality similar to the [Zoom API](https://developers.zoom.us/docs/api/), generating random but realistic data for testing and development purposes.
-
-Base URL: `https://zoom-test-apis.onrender.com`
+**Base URL:** `https://zoom-test-apis.onrender.com` (or set `BASE_URL` in `.env`)
 
 ## Authentication
 
-All endpoints require a Bearer token in the Authorization header. Since this is a mock API, **any token value will work**. Simply include:
-```
+**This mock only:** All endpoints expect a `Bearer` token, and **this mock accepts any Bearer token value** so you can test without real credentials.
+
+**Zoom’s real API:** Zoom does **not** accept arbitrary tokens. Production Zoom APIs require either:
+- **OAuth 2.0** (user or server-to-server), or  
+- **JWT** (legacy; signed with your Zoom app’s API Key and Secret).
+
+Tokens must be obtained from Zoom (e.g. OAuth flow or JWT generation). See [Zoom Authentication](https://developers.zoom.us/docs/integrations/oauth/) and [Zoom API](https://developers.zoom.us/docs/api/).
+
+For this mock, use any value for testing:
+
+```http
 Authorization: Bearer any-token-value
 ```
 
-## Available Endpoints
+## Endpoint checks and Zoom alignment
 
-### Users
-- `GET /users`: Retrieve a list of users
-- `GET /users/<user_id>`: Get specific user details
-- `POST /users`: Create a new user
-- `PUT /users/<user_id>`: Update user details
-- `GET /users/<user_id>/status`: Update a user's status (activate/deactivate)
-- `GET /users/<user_id>/token`: Get a user's Zoom token or ZAK
-- `DELETE /users/<user_id>/token`: Revoke a user's SSO token
-- `POST /users/<user_id>/settings/virtual_backgrounds`: Upload virtual background files for a user
-- `DELETE /users/<user_id>/settings/virtual_backgrounds`: Delete virtual background files for a user
+**Smoke tests:** The following were exercised and return HTTP 200 (or 201/204 where applicable):
 
-### Meetings
-- `GET /users/<user_id>/meetings`: Get meetings for a specific user
-- `GET /meetings/<meeting_id>`: Get specific meeting details
-- `POST /meetings`: Create a new meeting
-- `GET /meetings/<meeting_id>/meeting_summary`: Get summary for a specific meeting
+- `GET /users`, `GET /users/<user_id>`
+- `GET /users/<user_id>/meetings?from=2026-01-01&to=2026-12-31`
+- `GET /meetings/<meeting_id>`, `GET /meetings/<meeting_id>/meeting_summary`
+- `GET /users/<user_id>/recordings`, `GET /meetings/<meeting_id>/recordings`
+- `GET /qss/score/<meeting_id>`
+- `GET /rec/download/<meeting_id>/transcript.vtt`
 
-### Recordings
-- `GET /users/<user_id>/recordings`: Get recordings for a specific user
-- `GET /recordings/<recording_id>`: Get specific recording details
-- `GET /rec/download/<path:path>`: Download VTT transcript file
-- `DELETE /recordings/<recording_id>`: Delete a specific recording
+**Documented in Zoom’s API:** The following areas are covered in Zoom’s official docs ([developers.zoom.us](https://developers.zoom.us/docs/api/), base path `https://api.zoom.us/v2/`):
 
-### Calendar
-- `GET /calendar/events`: Get calendar events
-- `POST /calendar/events`: Create calendar event
-- `PUT /calendar/events/<event_id>`: Update calendar event
-- `DELETE /calendar/events/<event_id>`: Delete a calendar event
+- **Users** – List/create/get/update/delete user, status, token, settings (e.g. virtual backgrounds).
+- **Meetings** – List/create/get/update/delete meetings, meeting summary, past meeting participants.
+- **Recordings** – List user recordings, list/delete meeting recordings (e.g. `GET /users/:userId/recordings`, `GET /meetings/:meetingId/recordings`).
+- **Accounts** – Account-level settings (e.g. lock settings).
+- **Zoom Phone** – Account settings, outbound caller ID, rooms, etc. (separate Zoom Phone API).
+- **Zoom Chat** – Channels, messages, members (separate Chat API).
 
-### Mail
-- `POST /mail/send`: Send email
-- `GET /mail/inbox`: Get inbox messages
-- `GET /mailboxes/<email>/drafts`: List drafts for a mailbox
-- `GET /mailboxes/<email>/labels`: List labels for a mailbox
-- `GET /mailboxes/<email>/threads`: List threads for a mailbox
-- `DELETE /mailboxes/<email>/drafts/<draft_id>`: Delete a draft
+**Not part of Zoom’s REST API (mock-only / inspired by other products):**
 
-### Chat
-- `GET /channels`: List user's chat channels
-- `POST /channels`: Create a new chat channel
-- `GET /channels/<channel_id>/messages`: Get messages for a channel
-- `POST /channels/<channel_id>/messages`: Send a message to a channel
-- `GET /channels/<channel_id>/members`: List members in a channel
-- `POST /channels/<channel_id>/members`: Add members to a channel
-- `GET /channels/<channel_id>`: Get a specific channel
-- `PATCH /channels/<channel_id>`: Update a channel's settings
-- `DELETE /channels/<channel_id>`: Delete a channel
+- **Calendar** – The `/calendars/...` and event endpoints (e.g. `calendar#event`, ACL, freeBusy) follow a **Google Calendar–style** API, not Zoom’s calendar integration.
+- **Mail** – The `/emails/mailboxes/...` (drafts, labels, threads, send) are **Gmail-style**; Zoom does not expose a general “Mail” REST API like this.
+- **QSS / quality score** – Endpoints like `/qss/score`, `/qss/feedback`, and `/metrics/.../qos_summary` are **mock/conceptual** for testing; Zoom has reporting/dashboard and metrics APIs but the exact paths and shapes differ.
 
-### Phone
-- `GET /account_settings`: Get account settings for phone
-- `GET /outbound_caller_id/customized_numbers`: Get customized phone numbers
+So: **Users, Meetings, Recordings, Past participants, Meeting summary, Accounts, Phone, and Chat** align with Zoom-documented concepts (paths may use or omit a `/v2` prefix in this mock). **Calendar, Mail, and the exact QSS paths** are not from Zoom’s docs and are for mock/testing only.
 
-### Quality Scoring (QSS)
-- `GET /qss/score/<meeting_id>`: Get quality score for a meeting
-- `POST /qss/feedback`: Submit quality feedback
-- `GET /metrics/meetings/<meeting_id>/participants/qos_summary`: Get QoS summary for meeting participants
-- `GET /metrics/webinars/<webinar_id>/participants/qos_summary`: Get QoS summary for webinar participants
-- `GET /videosdk/sessions/<session_id>/users/qos_summary`: Get QoS summary for session users
-- `GET /qss/feedback/<feedback_id>`: Get specific feedback details
-- `DELETE /qss/feedback/<feedback_id>`: Delete specific feedback
+---
 
-## Sample API Calls
+## Users (Zoom-style)
 
-### Get User Details
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/users` | List users (supports `page_size`, `page_number`) |
+| POST | `/users` | Create user (body: `email`, `first_name`, `last_name`) |
+| GET | `/users/<user_id>` | Get user |
+| PATCH | `/users/<user_id>` | Update user |
+| DELETE | `/users/<user_id>` | Delete user |
+| PUT | `/users/<user_id>/status` | Update status (body: `action`: activate / deactivate) |
+| GET | `/users/<user_id>/token` | Get user token/ZAK |
+| DELETE | `/users/<user_id>/token` | Revoke SSO token |
+| POST | `/users/<user_id>/settings/virtual_backgrounds` | Upload virtual background |
+| DELETE | `/users/<user_id>/settings/virtual_backgrounds` | Delete virtual backgrounds |
+
+---
+
+## Meetings
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/users/<user_id>/meetings` | List meetings (query: `from`, `to` — default 2026) |
+| POST | `/users/<user_id>/meetings` | Create meeting |
+| GET | `/meetings/<meeting_id>` | Get meeting by ID |
+| GET | `/users/<user_id>/meetings/<meeting_id>` | Get meeting (with host) |
+| PATCH | `/users/<user_id>/meetings/<meeting_id>` | Update meeting |
+| DELETE | `/users/<user_id>/meetings/<meeting_id>` | Delete meeting |
+| GET | `/meetings/<meeting_id>/meeting_summary` | Get meeting summary |
+| GET | `/past_meetings/<meeting_id>/participants` | List past meeting participants |
+
+---
+
+## Recordings
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/users/<user_id>/recordings` | List user recordings (`from`, `to`, `page_size`) |
+| GET | `/meetings/<meeting_id>/recordings` | List recordings for a meeting |
+| DELETE | `/meetings/<meeting_id>/recordings/<recording_id>` | Delete a recording |
+| GET | `/rec/download/<meeting_id>/transcript.vtt` | Download VTT transcript |
+
+---
+
+## Quality Scoring (QSS)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/qss/score/<meeting_id>` | Get quality score for meeting |
+| POST | `/qss/feedback` | Submit quality feedback |
+| GET | `/qss/feedback/<feedback_id>` | Get feedback by ID |
+| DELETE | `/qss/feedback/<feedback_id>` | Delete feedback |
+| GET | `/metrics/meetings/<meeting_id>/participants/qos_summary` | Meeting QoS summary |
+| GET | `/metrics/webinars/<webinar_id>/participants/qos_summary` | Webinar QoS summary |
+| GET | `/videosdk/sessions/<session_id>/users/qos_summary` | Video SDK session QoS |
+
+---
+
+## Calendar
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/calendars/<cal_id>` | Get calendar |
+| PATCH | `/calendars/<cal_id>` | Update calendar |
+| DELETE | `/calendars/<cal_id>` | Delete calendar |
+| POST | `/calendars` | Create calendar |
+| GET | `/calendars/users/<user_id>/calendarList` | List user calendars |
+| GET | `/calendars/<cal_id>/events` | List events |
+| GET | `/calendars/<cal_id>/events/<event_id>` | Get event |
+| POST | `/calendars/<cal_id>/events/import` | Import event |
+| POST | `/calendars/<cal_id>/events/quickAdd` | Quick add (query: `text`) |
+| DELETE | `/calendars/<cal_id>/events/<event_id>` | Delete event |
+| POST | `/calendars/<cal_id>/events/<event_id>/move` | Move event (query: `destination`) |
+| GET | `/calendars/<cal_id>/acl` | List ACL rules |
+| POST | `/calendars/<cal_id>/acl` | Create ACL rule |
+| GET | `/calendars/<cal_id>/acl/<acl_id>` | Get ACL rule |
+| DELETE | `/calendars/<cal_id>/acl/<acl_id>` | Delete ACL rule |
+| GET | `/calendars/colors` | Calendar/event colors |
+| POST | `/calendars/freeBusy` | Query free/busy |
+
+---
+
+## Mail (emails)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/emails/mailboxes/<email>/drafts` | List drafts |
+| GET | `/emails/mailboxes/<email>/labels` | List labels |
+| GET | `/emails/mailboxes/<email>/threads` | List threads |
+| POST | `/emails/mailboxes/<email>/messages/send` | Send message (body: `raw`, optional `sendTime`) |
+
+---
+
+## Chat
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/chat/channels` | List channels |
+| POST | `/chat/channels` | Create channel |
+| GET | `/chat/channels/<channel_id>` | Get channel |
+| PATCH | `/chat/channels/<channel_id>` | Update channel |
+| DELETE | `/chat/channels/<channel_id>` | Delete channel |
+| GET | `/chat/channels/<channel_id>/messages` | List messages |
+| POST | `/chat/channels/<channel_id>/messages` | Send message |
+| GET | `/chat/channels/<channel_id>/members` | List members |
+| POST | `/chat/channels/<channel_id>/members` | Add members |
+| DELETE | `/chat/channels/<channel_id>/members/<member_id>` | Remove member |
+| POST | `/chat/channels/<channel_id>/members/me` | Join channel |
+| DELETE | `/chat/channels/<channel_id>/members/me` | Leave channel |
+| POST | `/chat/channels/search` | Search channels |
+| GET | `/chat/users/<user_id>/messages` | List user messages |
+| POST | `/chat/users/<user_id>/messages` | Send DM |
+| GET/PUT/PATCH/DELETE | `/chat/users/<user_id>/messages/<message_id>` | Get/update/delete message |
+| GET | `/chat/users/me/messages` | List my messages |
+| GET/PUT/PATCH/DELETE | `/chat/users/me/messages/<message_id>` | My message |
+
+---
+
+## Phone (v2)
+
+Prefix: `/v2/phone`
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/v2/phone/account_settings` | Account settings |
+| GET | `/v2/phone/outbound_caller_id/customized_numbers` | Customized numbers |
+| GET | `/v2/phone/outbound_caller_id/customized_numbers/<id>` | Get number |
+| POST | `/v2/phone/outbound_caller_id/customized_numbers` | Add number |
+| DELETE | `/v2/phone/outbound_caller_id/customized_numbers/<id>` | Delete number |
+| GET/PATCH | `/v2/phone/call_live_transcription` | Live transcription |
+| GET/PATCH | `/v2/phone/local_survivability_mode` | Local survivability |
+| GET | `/v2/phone/alert_settings` | Alert settings |
+| GET | `/v2/phone/voice_mails` | Voicemails |
+| GET | `/v2/phone/rooms` | List Zoom Rooms |
+| GET/POST/DELETE | `/v2/phone/rooms/<room_id>` | Get/create/delete room |
+| POST/DELETE | `/v2/phone/rooms/<room_id>/calling_plans/...` | Calling plans |
+| POST/DELETE | `/v2/phone/rooms/<room_id>/phone_numbers/...` | Room phone numbers |
+
+---
+
+## Accounts
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/accounts/<accountId>/lock_settings` | Account lock settings |
+
+---
+
+## Sample requests (2026)
+
+**Get user:**
 ```bash
-curl -X GET https://zoom-test-apis.onrender.com/users/abc123 \
-  -H "Authorization: Bearer any-token-value"
+curl -s -X GET "https://zoom-test-apis.onrender.com/users/abc123" \
+  -H "Authorization: Bearer any-token"
 ```
 
-Response:
+**List meetings (2026 range):**
+```bash
+curl -s -X GET "https://zoom-test-apis.onrender.com/users/abc123/meetings?from=2026-01-01&to=2026-12-31" \
+  -H "Authorization: Bearer any-token"
+```
+
+**Get meeting summary:**
+```bash
+curl -s -X GET "https://zoom-test-apis.onrender.com/meetings/meeting123/meeting_summary" \
+  -H "Authorization: Bearer any-token"
+```
+
+**Error response (Zoom-style):**
 ```json
 {
-    "id": "abc123",
-    "first_name": "John",
-    "last_name": "Doe",
-    "email": "john.doe@example.com",
-    "created_at": "2024-03-20T10:00:00Z",
-    "settings": {
-        "timezone": "America/New_York",
-        "language": "en-US"
-    }
+  "error": {
+    "code": "404",
+    "message": "Resource not found",
+    "details": "The requested URL was not found"
+  }
 }
 ```
 
-### Get User Meetings
-```bash
-curl -X GET https://zoom-test-apis.onrender.com/users/abc123/meetings \
-  -H "Authorization: Bearer mock-token-123"
-```
+---
 
-Response:
-```json
-{
-    "page_size": 30,
-    "total_records": 2,
-    "meetings": [
-        {
-            "id": "meeting123",
-            "topic": "Weekly Team Sync",
-            "start_time": "2024-03-21T15:00:00Z",
-            "duration": 60,
-            "timezone": "America/New_York",
-            "participants": 8,
-            "recording_available": true
-        },
-        {
-            "id": "meeting456",
-            "topic": "Project Review",
-            "start_time": "2024-03-22T14:00:00Z",
-            "duration": 45,
-            "timezone": "America/New_York",
-            "participants": 5,
-            "recording_available": false
-        }
-    ]
-}
-```
+## Configuration
 
-### Get Meeting Summary
-```bash
-curl -X GET https://zoom-test-apis.onrender.com/meetings/meeting123/meeting_summary \
-  -H "Authorization: Bearer any-token-value"
-```
+- **BASE_URL** – Used in response links (e.g. `join_url`, `download_url`). Default: `https://api.zoom.us`
+- **DEFAULT_DATE_FROM / DEFAULT_DATE_TO** – Default list date range (e.g. 2026-01-01 to 2026-12-31)
+- **DEFAULT_PAGE_SIZE / MAX_PAGE_SIZE** – Pagination (default 30, max 300)
 
-Response:
-```json
-{
-    "meeting_id": "meeting123",
-    "topic": "Weekly Team Sync",
-    "date": "2024-03-21",
-    "duration": "1:00:00",
-    "summary": {
-        "title": "Team Progress and Sprint Planning",
-        "overview": "Discussion of current sprint progress and planning for next sprint",
-        "key_points": [
-            "Completed user authentication module",
-            "Started work on API documentation",
-            "Identified performance bottlenecks"
-        ],
-        "action_items": [
-            {
-                "description": "Review pull request #123",
-                "assignee": "John Doe",
-                "due_date": "2024-03-23"
-            },
-            {
-                "description": "Update API documentation",
-                "assignee": "Jane Smith",
-                "due_date": "2024-03-24"
-            }
-        ]
-    },
-    "participants": [
-        {
-            "id": "abc123",
-            "name": "John Doe",
-            "email": "john.doe@example.com",
-            "duration": 3600
-        }
-    ]
-}
-```
+See `config.py` and optional `.env`.
 
-### Error Response Example
-```bash
-curl -X GET https://zoom-test-apis.onrender.com/meetings/invalid123/meeting_summary \
-  -H "Authorization: Bearer any-token-value"
-```
+---
 
-Response:
-```json
-{
-    "error": {
-        "code": "404",
-        "message": "Meeting not found",
-        "details": "No meeting exists with ID: invalid123"
-    }
-}
-```
+## Data structure (Zoom-style, file-backed)
+
+API responses for **users**, **meetings**, **recordings**, **meeting summary**, **past participants**, and **VTT download** are derived from the `data/` directory. This mirrors Zoom’s account/user/meeting model.
+
+| Path | Description |
+|------|-------------|
+| `data/accounts.json` | Zoom account list (e.g. account id, name, settings). |
+| `data/users/<user_id>.json` | Full user profile (id, first_name, last_name, email, type, timezone, status, …). Optional: `meeting_ids[]`, `recording_meeting_ids[]` to link to meetings that have recordings. |
+| `data/meetings/<meeting_id>.json` | Full meeting object (uuid, id, host_id, topic, type, start_time, duration, timezone, join_url, settings, …). Also: `summary` (title, overview, details, next_steps), `vtt_data` (transcript), `recording_files[]`, `participants[]`. |
+
+- **GET /users**, **GET /users/:id** → from `data/users/`.
+- **GET /users/:id/meetings** → meetings listed in the user’s `meeting_ids`, loaded from `data/meetings/`.
+- **GET /meetings/:id**, **GET /meetings/:id/meeting_summary** → from `data/meetings/:id.json`.
+- **GET /users/:id/recordings**, **GET /meetings/:id/recordings** → recording files and meeting metadata from the same meeting files.
+- **GET /rec/download/:meeting_id/transcript.vtt** → VTT from `vtt_data` in `data/meetings/:id.json`.
+- **GET /past_meetings/:id/participants** → `participants` array from `data/meetings/:id.json`.
+
+Write operations (POST/PATCH/PUT/DELETE) may return success and update in-memory/cache only; persisting to these JSON files is optional and partially implemented (e.g. user PATCH merges into loaded user and can be extended to call `data_store.save_user`).
+
+The legacy `files/` directory (meeting summaries only) is no longer used by the API; data was migrated into `data/meetings/` via `scripts/migrate_meetings_to_data.py`.
+
+---
 
 ## Notes
 
-- This is a mock API that generates random but realistic data
-- Data is not persistent between requests
-- Any Bearer token value will be accepted
-- No rate limiting is enforced
+- Core Zoom resources (users, meetings, recordings, summary, VTT, participants) are file-backed in `data/` and stable across restarts; other endpoints (calendar, mail, chat, phone, QSS) may use in-memory or random mock data.
+- Any Bearer token is accepted; no rate limiting.
+- Architecture: `config.py` (env/constants), `data_store.py` (load/save from `data/`), `helpers.py` (ids, dates, errors), `models/auth.py` (auth), `routes/*` (Zoom-aligned endpoints), VTT download in `app.py`.
 
-For questions or issues, please open a GitHub issue.
+For issues or contributions, open a GitHub issue.

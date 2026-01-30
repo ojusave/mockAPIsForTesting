@@ -4,11 +4,20 @@ import datetime
 import uuid
 import os
 import json
-from queue import Queue
 from threading import Lock
 
-# Base URL (replace zoom.us with ngrok URL)
-BASE_URL = "https://api-endpoint-0f24e0ac73d6.herokuapp.com"
+from config import BASE_URL
+
+# Re-export for backward compatibility
+__all__ = [
+    "BASE_URL",
+    "get_next_file_content",
+    "generate_random_string",
+    "generate_random_date",
+    "generate_user_id",
+    "generate_base_user_data",
+    "generate_cache_key",
+]
 
 FILES_DIR = 'files'
 
@@ -88,14 +97,14 @@ def generate_base_user_data():
         "timezone": random.choice(["America/Los_Angeles", "America/New_York", "Asia/Tokyo", "Europe", "Australia"]),
         "verified": random.randint(0, 1),
         "dept": random.choice(["Engineering", "Sales", "Marketing", "Product"]),
-        "created_at": generate_random_date(datetime.datetime(2020, 1, 1), datetime.datetime.now()).isoformat() + "Z",
-        "last_login_time": generate_random_date(datetime.datetime(2023, 1, 1), datetime.datetime.now()).isoformat() + "Z",
+        "created_at": generate_random_date(datetime.datetime(2022, 1, 1), datetime.datetime(2026, 12, 31)).isoformat() + "Z",
+        "last_login_time": generate_random_date(datetime.datetime(2025, 1, 1), datetime.datetime(2026, 12, 31)).isoformat() + "Z",
         "last_client_version": f"{random.randint(5, 6)}.{random.randint(1, 13)}.{random.randint(1000, 9999)}({random.choice(['mac', 'win', 'ipad', 'iphone'])})",
         "pic_url": f"{BASE_URL}/p/{uuid.uuid4()}/{uuid.uuid4()}",
         "language": "en-US",
         "status": random.choice(["active", "inactive"]),
         "role_id": str(random.randint(1, 5)),
-        "user_created_at": generate_random_date(datetime.datetime(2020, 1, 1), datetime.datetime.now()).isoformat() + "Z"
+        "user_created_at": generate_random_date(datetime.datetime(2022, 1, 1), datetime.datetime(2026, 12, 31)).isoformat() + "Z"
     }
 
 # Initialize the file list when the module is loaded
@@ -106,3 +115,11 @@ def generate_cache_key(*args, **kwargs):
     key_parts = [str(arg) for arg in args]
     key_parts.extend(f"{k}:{v}" for k, v in sorted(kwargs.items()))
     return ":".join(key_parts)
+
+
+def error_response(code, message, details=None):
+    """Zoom-style error payload for JSON responses."""
+    body = {"error": {"code": str(code), "message": message}}
+    if details is not None:
+        body["error"]["details"] = details
+    return body

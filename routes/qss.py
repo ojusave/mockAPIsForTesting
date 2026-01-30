@@ -1,10 +1,12 @@
 from flask import Blueprint, jsonify, request
-from helpers import generate_random_string, get_next_file_content
+from helpers import generate_random_string
 from models.auth import require_auth
-import datetime
 import random
 
-qss_bp = Blueprint('qss', __name__)
+qss_bp = Blueprint("qss", __name__)
+
+# In-memory store for mock feedback (Zoom Quality Scoring / QSS)
+_feedback_store = {}
 
 def generate_qos_details():
     """Generate random QoS metrics"""
@@ -45,13 +47,63 @@ def generate_qos_data():
         for qos_type in random.sample(qos_types, random.randint(3, len(qos_types)))
     ]
 
-@qss_bp.route('/metrics/meetings/<meeting_id>/participants/qos_summary', methods=['GET'])
+@qss_bp.route("/qss/score/<meeting_id>", methods=["GET"])
+@require_auth
+def get_qss_score(meeting_id):
+    """Get quality score. Query: from, to (optional date range)."""
+    request.args.get("from")
+    request.args.get("to")
+    score = round(random.uniform(3.0, 5.0), 1)
+    return jsonify({
+        "meeting_id": meeting_id,
+        "quality_score": score,
+        "score_breakdown": {
+            "video": round(random.uniform(3.5, 5.0), 1),
+            "audio": round(random.uniform(3.5, 5.0), 1),
+            "screen_share": round(random.uniform(3.5, 5.0), 1),
+        },
+    })
+
+
+@qss_bp.route("/qss/feedback", methods=["POST"])
+@require_auth
+def submit_qss_feedback():
+    """Submit quality feedback (Zoom QSS)."""
+    data = request.get_json() or {}
+    feedback_id = generate_random_string(22)
+    _feedback_store[feedback_id] = {
+        "id": feedback_id,
+        "meeting_id": data.get("meeting_id", ""),
+        "rating": data.get("rating"),
+        "comments": data.get("comments", ""),
+        "created_at": data.get("created_at"),
+    }
+    return jsonify(_feedback_store[feedback_id]), 201
+
+
+@qss_bp.route("/qss/feedback/<feedback_id>", methods=["GET"])
+@require_auth
+def get_qss_feedback(feedback_id):
+    """Get specific feedback by ID."""
+    if feedback_id not in _feedback_store:
+        return jsonify({"error": {"code": "404", "message": "Feedback not found"}}), 404
+    return jsonify(_feedback_store[feedback_id])
+
+
+@qss_bp.route("/qss/feedback/<feedback_id>", methods=["DELETE"])
+@require_auth
+def delete_qss_feedback(feedback_id):
+    """Delete specific feedback."""
+    _feedback_store.pop(feedback_id, None)
+    return "", 204
+
+
+@qss_bp.route("/metrics/meetings/<meeting_id>/participants/qos_summary", methods=["GET"])
 @require_auth
 def get_meeting_participants_qos(meeting_id):
-
-    page_size = int(request.args.get('page_size', 1))
-    next_page_token = request.args.get('next_page_token', '')
-
+    """Query: page_size, next_page_token."""
+    page_size = max(1, min(int(request.args.get("page_size", 30)), 300))
+    next_page_token = request.args.get("next_page_token", "")
     participants = []
     num_participants = random.randint(1, page_size)
     
@@ -73,12 +125,12 @@ def get_meeting_participants_qos(meeting_id):
 
     return jsonify(response)
 
-@qss_bp.route('/metrics/webinars/<webinar_id>/participants/qos_summary', methods=['GET'])
+@qss_bp.route("/metrics/webinars/<webinar_id>/participants/qos_summary", methods=["GET"])
 @require_auth
 def get_webinar_participants_qos(webinar_id):
-
-    page_size = int(request.args.get('page_size', 1))
-    next_page_token = request.args.get('next_page_token', '')
+    """Query: page_size, next_page_token."""
+    page_size = max(1, min(int(request.args.get("page_size", 30)), 300))
+    next_page_token = request.args.get("next_page_token", "")
 
     participants = []
     num_participants = random.randint(1, page_size)
@@ -101,12 +153,12 @@ def get_webinar_participants_qos(webinar_id):
 
     return jsonify(response)
 
-@qss_bp.route('/videosdk/sessions/<session_id>/users/qos_summary', methods=['GET'])
+@qss_bp.route("/videosdk/sessions/<session_id>/users/qos_summary", methods=["GET"])
 @require_auth
 def get_session_users_qos(session_id):
-
-    page_size = int(request.args.get('page_size', 1))
-    next_page_token = request.args.get('next_page_token', '')
+    """Query: page_size, next_page_token."""
+    page_size = max(1, min(int(request.args.get("page_size", 30)), 300))
+    next_page_token = request.args.get("next_page_token", "")
 
     users = []
     num_users = random.randint(1, page_size)

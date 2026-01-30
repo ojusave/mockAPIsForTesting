@@ -79,23 +79,27 @@ def get_live_transcription_settings():
     return jsonify(MOCK_PHONE_SETTINGS['call_live_transcription'])
 
 @require_auth
-@phone_bp.route('/call_live_transcription', methods=['PATCH'])
+@phone_bp.route("/call_live_transcription", methods=["PATCH"])
 def update_live_transcription_settings():
-    settings = request.json
-    MOCK_PHONE_SETTINGS['call_live_transcription'].update(settings)
-    return jsonify(MOCK_PHONE_SETTINGS['call_live_transcription'])
+    """Body: enable, locked, transcription_start_prompt, etc."""
+    settings = request.get_json() or {}
+    MOCK_PHONE_SETTINGS["call_live_transcription"].update(settings)
+    return jsonify(MOCK_PHONE_SETTINGS["call_live_transcription"])
+
 
 @require_auth
-@phone_bp.route('/local_survivability_mode', methods=['GET'])
+@phone_bp.route("/local_survivability_mode", methods=["GET"])
 def get_local_survivability_mode():
-    return jsonify(MOCK_PHONE_SETTINGS['local_survivability_mode'])
+    return jsonify(MOCK_PHONE_SETTINGS["local_survivability_mode"])
+
 
 @require_auth
-@phone_bp.route('/local_survivability_mode', methods=['PATCH'])
+@phone_bp.route("/local_survivability_mode", methods=["PATCH"])
 def update_local_survivability_mode():
-    settings = request.json
-    MOCK_PHONE_SETTINGS['local_survivability_mode'].update(settings)
-    return jsonify(MOCK_PHONE_SETTINGS['local_survivability_mode'])
+    """Body: enable, locked, locked_by."""
+    settings = request.get_json() or {}
+    MOCK_PHONE_SETTINGS["local_survivability_mode"].update(settings)
+    return jsonify(MOCK_PHONE_SETTINGS["local_survivability_mode"])
 
 # New endpoints based on OpenAPI specification
 @require_auth

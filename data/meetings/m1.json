@@ -1,0 +1,93 @@
+{
+  "uuid": "m1",
+  "id": "m1",
+  "host_id": "u1",
+  "host_email": "u1@zoom-mock.com",
+  "topic": "Marketing Meeting",
+  "type": 2,
+  "start_time": "2026-01-15T14:00:00Z",
+  "duration": 60,
+  "timezone": "America/New_York",
+  "created_at": "2026-01-01T00:00:00Z",
+  "join_url": "https://api.zoom.us/j/m1",
+  "start_url": "https://api.zoom.us/s/m1",
+  "password": "abc123",
+  "agenda": "The meeting focused on the new product launch, social media strategy, and influencer partnerships. Key discussions involved the establishment of a social media working group, metrics for success, and ",
+  "settings": {
+    "host_video": true,
+    "participant_video": false,
+    "join_before_host": false,
+    "mute_upon_entry": true,
+    "waiting_room": true,
+    "meeting_authentication": false
+  },
+  "summary": {
+    "summary_title": "Marketing Meeting",
+    "summary_overview": "The meeting focused on the new product launch, social media strategy, and influencer partnerships. Key discussions involved the establishment of a social media working group, metrics for success, and initiatives to increase brand awareness and sales.",
+    "summary_details": [
+      "Sarah opened the meeting and introduced the topic of marketing. ",
+      "John reviewed the agenda, which included discussing the new product launch, social media strategy, and influencer partnerships.",
+      "Emily announced that David from the PR department would present insights on recent media coverage.",
+      "David shared the company's recent press releases and how they've been received by the media.",
+      "Sarah inquired about how marketing success is measured, raising the need for clear metrics and benchmarks.",
+      "Emily highlighted a recent trend in social media: the increased focus on video content.",
+      "David asked how this trend would impact the company's brand awareness and sales, to which Sarah responded that video content can increase engagement and conversion rates.",
+      "Emily added that the target audience is particularly active on Instagram and TikTok, and that the company needs to meet their expectations and preferences.",
+      "John proposed the formation of a social media working group to further develop the strategy and track progress. Emily volunteered to be part of the group, emphasizing the need for a dedicated team focused on social media efforts."
+    ],
+    "next_steps": [
+      "Form a social media working group with representatives from different departments.",
+      "Schedule a follow-up meeting to define the working group's objectives and timeline.",
+      "Develop a comprehensive social media strategy with a target for implementation within the next quarter."
+    ]
+  },
+  "vtt_data": "WEBVTT\n\n00:00:00 --> 00:00:05 Sarah: Good morning everyone, welcome to today's marketing meeting. 00:00:05 --> 00:00:20 John: Thanks Sarah. Before we begin, I'd like to briefly review the agenda for today's discussion. We'll be covering our new product launch, social media strategy, and influencer partnerships. 00:00:20 --> 00:01:00 Emily: I'd like to add that we also have a special guest, David from the PR department, who will share some insights on our recent media coverage. 00:01:00 --> 00:02:00 David: Hi everyone, thanks for having me. I'll be discussing our recent press releases and how they've been received by the media. 00:02:00 --> 00:04:00 Sarah: I'd like to ask, how do we measure the success of our marketing campaigns? Are we using any specific metrics or benchmarks? 00:04:00 --> 00:05:00 John: Great question, Sarah. That's something we'll be discussing later in the meeting. Emily, can you walk us through some of the recent trends in social media? 00:05:00 --> 00:08:00 Emily: Certainly. One trend we're seeing is the increased focus on video content. Companies are using more video in their marketing efforts. 00:08:00 --> 00:10:00 David: That's interesting. How do you think this will impact our company's brand awareness and sales? 00:10:00 --> 00:12:00 Sarah: Well, research has shown that video content can increase engagement and conversion rates. It's not just about creating content, but also about creating a story. 00:12:00 --> 00:15:00 Emily: I'd like to add that our target audience is particularly active on Instagram and TikTok. We need to ensure we're meeting their expectations and preferences. 00:15:00 --> 00:18:00 John: Thank you, Emily. That's an important point. Sarah, can you summarize some of the key takeaways from our discussion so far? 00:18:00 --> 00:20:00 Sarah: Sure. We've covered the new product launch, social media strategy, and influencer partnerships. 00:20:00 --> 00:25:00 Emily: I'd like to propose that we establish a social media working group to further develop our strategy and track progress. 00:25:00 --> 00:28:00 David: I agree. It would be beneficial to have a dedicated team focused on social media efforts. 00:28:00 --> 00:30:00 Sarah: Great, let's make that happen. We'll schedule a follow-up meeting to discuss the working group's objectives and timeline. 00:30:00 --> 00:35:00 John: Before we adjourn, are there any final questions or comments? 00:35:00 --> 00:40:00 Emily: Just one question, what's the target timeline for implementing our new social media strategy? 00:40:00 --> 00:45:00 Sarah: We're aiming to have a comprehensive plan in place within the next quarter. 00:45:00 --> 00:50:00 David: I think that's ambitious, but achievable. We'll need to work closely together to make it happen. 00:50:00 --> 00:55:00 Sarah: Thank you all for your participation and input today. Let's keep the momentum going and make a positive impact on our brand and sales.",
+  "recording_files": [
+    {
+      "id": "b1fae7db-548b-450d-a8f7-8d3096d4367c",
+      "meeting_id": "m1",
+      "recording_start": "2026-01-15T14:00:00Z",
+      "recording_end": "2026-01-15T15:00:00Z",
+      "file_type": "TRANSCRIPT",
+      "file_extension": "VTT",
+      "file_size": 2937,
+      "play_url": "https://api.zoom.us/rec/play/b1fae7db",
+      "download_url": "https://api.zoom.us/rec/download/m1/transcript.vtt",
+      "status": "completed",
+      "recording_type": "shared_screen_with_speaker_view"
+    },
+    {
+      "id": "7be12ba2-9867-4b19-bbe0-bc272dbeb595",
+      "meeting_id": "m1",
+      "recording_start": "2026-01-15T14:00:00Z",
+      "recording_end": "2026-01-15T15:00:00Z",
+      "file_type": "MP4",
+      "file_extension": "MP4",
+      "file_size": 50000000,
+      "play_url": "https://api.zoom.us/rec/play/7be12ba2",
+      "download_url": "https://api.zoom.us/rec/download/m1/recording.mp4",
+      "status": "completed",
+      "recording_type": "shared_screen_with_speaker_view"
+    }
+  ],
+  "participants": [
+    {
+      "id": "p1",
+      "name": "Alice Chen",
+      "user_id": "u1",
+      "user_email": "alice.chen@zoom-mock.com",
+      "join_time": "2026-01-15T14:00:00Z",
+      "leave_time": "2026-01-15T15:00:00Z",
+      "duration": 3600
+    },
+    {
+      "id": "p2",
+      "name": "Bob Martinez",
+      "user_id": "u2",
+      "user_email": "bob.martinez@zoom-mock.com",
+      "join_time": "2026-01-15T14:00:00Z",
+      "leave_time": "2026-01-15T15:00:00Z",
+      "duration": 3600
+    }
+  ]
+}

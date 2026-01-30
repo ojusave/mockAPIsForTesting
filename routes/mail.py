@@ -1,8 +1,9 @@
 from flask import Blueprint, jsonify, request
 from models.auth import require_auth
+from helpers import generate_random_string
 import time
 
-mail_bp = Blueprint('mail', __name__, url_prefix='/emails')
+mail_bp = Blueprint("mail", __name__, url_prefix="/emails")
 
 # Mock data for mail responses
 MOCK_DRAFTS = {
@@ -55,31 +56,42 @@ MOCK_THREADS = {
     "resultSizeEstimate": 10
 }
 
-@mail_bp.route('/mailboxes/<email>/drafts', methods=['GET'])
+@mail_bp.route("/mailboxes/<email>/drafts", methods=["GET"])
 @require_auth
 def list_drafts(email):
-    return jsonify(MOCK_DRAFTS)
+    """List drafts. Query: maxResults, pageToken."""
+    max_results = min(int(request.args.get("maxResults", 100)), 500)
+    page_token = request.args.get("pageToken", "")
+    out = dict(MOCK_DRAFTS)
+    out["resultSizeEstimate"] = min(len(out.get("drafts", [])), max_results)
+    return jsonify(out)
 
-@mail_bp.route('/mailboxes/<email>/labels', methods=['GET'])
+
+@mail_bp.route("/mailboxes/<email>/labels", methods=["GET"])
 @require_auth
 def list_labels(email):
+    """Query: maxResults, pageToken."""
     return jsonify(MOCK_LABELS)
 
-@mail_bp.route('/mailboxes/<email>/threads', methods=['GET'])
+
+@mail_bp.route("/mailboxes/<email>/threads", methods=["GET"])
 @require_auth
 def list_threads(email):
-    return jsonify(MOCK_THREADS)
+    """Query: maxResults, pageToken, q (search)."""
+    max_results = min(int(request.args.get("maxResults", 100)), 500)
+    q = request.args.get("q", "")
+    out = dict(MOCK_THREADS)
+    out["resultSizeEstimate"] = min(len(out.get("threads", [])), max_results)
+    return jsonify(out)
 
-@mail_bp.route('/mailboxes/<email>/messages/send', methods=['POST'])
+@mail_bp.route("/mailboxes/<email>/messages/send", methods=["POST"])
 @require_auth
 def send_email(email):
-
+    """Send email. Body: raw (base64, required), sendTime (optional), to, subject, etc."""
     try:
-        data = request.get_json()
-        
-        # Validate required fields
-        if not data.get('raw'):
-            return jsonify({"error": "Missing required field: raw"}), 400
+        data = request.get_json() or {}
+        if not data.get("raw"):
+            return jsonify({"error": {"code": "400", "message": "Validation failed", "details": "raw (base64 message) is required"}}), 400
 
         # Generate a mock message ID and thread ID
         message_id = f"{generate_random_string(16)}_e{int(time.time())}_{generate_random_string(3)}"
@@ -87,21 +99,9 @@ def send_email(email):
         # Prepare response
         response = {
             "id": message_id,
-            "threadId": message_id,  # Using same ID for thread in this mock
-            "labelIds": ["SCHEDULED"] if data.get('sendTime') else ["SENT"]
+            "threadId": message_id,
+            "labelIds": ["SCHEDULED"] if data.get("sendTime") else ["SENT"],
         }
-
         return jsonify(response)
-
     except Exception as e:
-        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
-
-# Add the generate_random_string function if not already present
-def generate_random_string(length):
-    """Generate a random string of specified length."""
-    import random
-    import string
-    characters = string.ascii_letters + string.digits
-    return ''.join(random.choice(characters) for _ in range(length))
-
-# Add more mail-related routes as needed 
+        return jsonify({"error": {"code": "500", "message": "Server error", "details": str(e)}}), 500

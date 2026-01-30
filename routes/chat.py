@@ -1,82 +1,83 @@
 from flask import Blueprint, jsonify, request
-from functools import wraps
-import time
+from models.auth import require_auth
 from cache_config import cache
+import time
 
-chat_bp = Blueprint('chat', __name__)
-
-# Simple auth decorator that just checks for bearer token presence
-def require_auth(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return jsonify({"error": "No valid bearer token provided"}), 401
-            
-        # Add a mock user to the request
-        request.user = {"id": "mock_user_id"}
-        return f(*args, **kwargs)
-    return decorated
+chat_bp = Blueprint("chat", __name__)
 
 # Store chat channels and messages in memory (replace with database in production)
 channels = {}
 messages = {}
 
-@chat_bp.route('/channels', methods=['GET'])
+def _get_mock_user_id():
+    """Mock user ID for chat; in real Zoom API this comes from token."""
+    return getattr(request, "user", None) and request.user.get("id") or "mock_user_id"
+
+
+@chat_bp.route("/channels", methods=["GET"])
 @require_auth
 def list_channels():
     """List user's chat channels"""
-    # In production, fetch channels from database/Zoom API
     return jsonify({
-        "channels": [channel for channel in channels.values()],
+        "channels": list(channels.values()),
         "page_size": len(channels),
-        "total_records": len(channels)
+        "total_records": len(channels),
     })
 
-@chat_bp.route('/channels', methods=['POST']) 
+@chat_bp.route("/channels", methods=["POST"])
 @require_auth
 def create_channel():
-    """Create a new chat channel"""
-    data = request.get_json()
-    
-    channel_id = str(len(channels) + 1)  # Simple ID generation
+    """Create channel. Body: name (required), type (1=private, 2=private_with_owner, 3=public, 4=instant), channel_settings."""
+    data = request.get_json() or {}
+    if not data.get("name"):
+        return jsonify({"error": {"code": "400", "message": "Validation failed", "details": "name is required"}}), 400
+    channel_id = str(len(channels) + 1)
     new_channel = {
         "id": channel_id,
-        "name": data.get("name"),
+        "name": data["name"],
         "type": data.get("type", 1),
-        "channel_settings": data.get("channel_settings", {})
+        "channel_settings": data.get("channel_settings") or {},
     }
-    
     channels[channel_id] = new_channel
-    
     return jsonify(new_channel), 201
 
-@chat_bp.route('/channels/<channel_id>/messages', methods=['GET'])
+@chat_bp.route("/channels/<channel_id>/messages", methods=["GET"])
 @require_auth
 def get_messages(channel_id):
-    """Get messages for a channel"""
+    """List messages. Query: page_size, next_page_token, to_contact (optional)."""
     if channel_id not in channels:
-        return jsonify({"error": "Channel not found"}), 404
-        
+        return jsonify({"error": {"code": "404", "message": "Channel not found"}}), 404
+    page_size = min(int(request.args.get("page_size", 50)), 200)
+    next_page_token = request.args.get("next_page_token", "")
     channel_messages = messages.get(channel_id, [])
+    total = len(channel_messages)
+    start = 0
+    if next_page_token:
+        try:
+            start = int(next_page_token)
+        except ValueError:
+            pass
+    page_msgs = channel_messages[start : start + page_size]
     return jsonify({
-        "messages": channel_messages,
-        "page_size": len(channel_messages)
+        "messages": page_msgs,
+        "page_size": len(page_msgs),
+        "next_page_token": str(start + page_size) if start + page_size < total else "",
     })
 
-@chat_bp.route('/channels/<channel_id>/messages', methods=['POST'])
+@chat_bp.route("/channels/<channel_id>/messages", methods=["POST"])
 @require_auth
 def send_message(channel_id):
-    """Send a message to a channel"""
+    """Send message. Body: message (required), to_contact (optional)."""
     if channel_id not in channels:
-        return jsonify({"error": "Channel not found"}), 404
-        
-    data = request.get_json()
+        return jsonify({"error": {"code": "404", "message": "Channel not found"}}), 404
+    data = request.get_json() or {}
+    if not data.get("message") and not data.get("content"):
+        return jsonify({"error": {"code": "400", "message": "Validation failed", "details": "message or content is required"}}), 400
     message = {
         "id": str(len(messages.get(channel_id, [])) + 1),
-        "message": data.get("message"),
-        "sender": request.user.get("id"),  # From auth middleware
-        "timestamp": int(time.time() * 1000)
+        "message": data.get("message") or data.get("content", ""),
+        "sender": _get_mock_user_id(),
+        "timestamp": int(time.time() * 1000),
     }
     
     if channel_id not in messages:
@@ -192,8 +193,8 @@ def join_channel(channel_id):
     # In production, add current user to channel in database/Zoom API
     return jsonify({
         "added_at": int(time.time() * 1000),
-        "id": request.user.get("id"),
-        "member_id": f"member_{request.user.get('id')}"
+        "id": _get_mock_user_id(),
+        "member_id": f"member_{_get_mock_user_id()}",
     }), 201
 
 @chat_bp.route('/channels/<channel_id>/members/me', methods=['DELETE'])
@@ -225,18 +226,17 @@ def list_user_messages(user_id):
         "next_page_token": None
     })
 
-@chat_bp.route('/chat/users/<user_id>/messages', methods=['POST'])
+@chat_bp.route("/chat/users/<user_id>/messages", methods=["POST"])
 @require_auth
 def send_user_message(user_id):
     """Send a direct message to a user"""
     data = request.get_json()
-    
     message = {
         "id": f"msg_{int(time.time())}",
         "message": data.get("message"),
-        "sender": request.user.get("id"),
+        "sender": _get_mock_user_id(),
         "receiver": user_id,
-        "timestamp": int(time.time() * 1000)
+        "timestamp": int(time.time() * 1000),
     }
     
     if 'direct_messages' not in messages:
@@ -269,26 +269,42 @@ def get_user_message(user_id, message_id):
     
     return jsonify({"error": "Message not found"}), 404
 
-@chat_bp.route('/chat/users/me/messages', methods=['GET'])
+@chat_bp.route("/chat/users/me/messages", methods=["GET"])
 @require_auth
 def list_my_messages():
     """List messages for the authenticated user"""
-    return list_user_messages(request.user.get('id'))
+    return list_user_messages(_get_mock_user_id())
 
-@chat_bp.route('/chat/users/me/messages/<message_id>', methods=['GET'])
+@chat_bp.route("/chat/users/me/messages/<message_id>", methods=["GET"])
 @require_auth
 def get_my_message(message_id):
     """Get a specific message for the authenticated user"""
-    return get_user_message(request.user.get('id'), message_id)
+    return get_user_message(_get_mock_user_id(), message_id)
 
-@chat_bp.route('/chat/users/me/messages/<message_id>', methods=['PUT', 'PATCH'])
+@chat_bp.route("/chat/users/me/messages/<message_id>", methods=["PUT", "PATCH"])
 @require_auth
 def update_my_message(message_id):
     """Update authenticated user's message"""
-    return update_user_message(request.user.get('id'), message_id)
+    data = request.get_json() or {}
+    for channel_msgs in messages.values():
+        for msg in channel_msgs:
+            if msg.get("id") == message_id and msg.get("sender") == _get_mock_user_id():
+                msg.update({k: v for k, v in data.items() if k in ("message",)})
+                return jsonify(msg)
+    return jsonify({"error": {"code": "404", "message": "Message not found"}}), 404
 
-@chat_bp.route('/chat/users/me/messages/<message_id>', methods=['DELETE'])
+@chat_bp.route("/chat/users/me/messages/<message_id>", methods=["DELETE"])
 @require_auth
 def delete_my_message(message_id):
     """Delete authenticated user's message"""
-    return delete_user_message(request.user.get('id'), message_id) 
+    for channel_msgs in messages.values():
+        for i, msg in enumerate(channel_msgs):
+            if msg.get("id") == message_id and msg.get("sender") == _get_mock_user_id():
+                channel_msgs.pop(i)
+                return "", 204
+    if "direct_messages" in messages:
+        for i, msg in enumerate(messages["direct_messages"]):
+            if msg.get("id") == message_id and msg.get("sender") == _get_mock_user_id():
+                messages["direct_messages"].pop(i)
+                return "", 204
+    return jsonify({"error": {"code": "404", "message": "Message not found"}}), 404 

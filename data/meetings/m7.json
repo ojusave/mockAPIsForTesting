@@ -1,0 +1,93 @@
+{
+  "uuid": "m7",
+  "id": "m7",
+  "host_id": "u2",
+  "host_email": "u2@zoom-mock.com",
+  "topic": "Corporate Social Responsibility Meeting",
+  "type": 2,
+  "start_time": "2026-01-15T14:00:00Z",
+  "duration": 60,
+  "timezone": "America/New_York",
+  "created_at": "2026-01-01T00:00:00Z",
+  "join_url": "https://api.zoom.us/j/m7",
+  "start_url": "https://api.zoom.us/s/m7",
+  "password": "abc123",
+  "agenda": "The meeting focused on the importance of Corporate Social Responsibility (CSR), recent trends, and ways to improve the company\u2019s CSR practices. Key discussions involved the establishment of a CSR work",
+  "settings": {
+    "host_video": true,
+    "participant_video": false,
+    "join_before_host": false,
+    "mute_upon_entry": true,
+    "waiting_room": true,
+    "meeting_authentication": false
+  },
+  "summary": {
+    "summary_title": "Corporate Social Responsibility Meeting",
+    "summary_overview": "The meeting focused on the importance of Corporate Social Responsibility (CSR), recent trends, and ways to improve the company\u2019s CSR practices. Key discussions involved the establishment of a CSR working group, metrics for success, and initiatives to increase transparency and accountability.",
+    "summary_details": [
+      "Fatima opened the meeting and introduced the topic of Corporate Social Responsibility (CSR).",
+      "Alexei reviewed the agenda, which included discussing the importance of CSR, recent trends, and how the company can improve its practices.",
+      "Carlos announced that John from the sustainability department would present insights on current initiatives.",
+      "John shared the company's efforts in reducing carbon emissions and increasing community engagement.",
+      "Hiroshi inquired about how CSR success is measured, raising the need for clear metrics and benchmarks.",
+      "Alexei highlighted a recent trend in CSR: the growing focus on transparency and accountability, with companies held to higher standards by consumers and stakeholders.",
+      "Carlos asked how this trend would impact the company\u2019s reputation and bottom line, to which John responded that companies with strong CSR practices tend to outperform others.",
+      "Hiroshi added that CSR is particularly important in Asian markets, where local expectations and regulations need to be met.",
+      "Carlos proposed the formation of a CSR working group to further develop initiatives and track progress. Hiroshi volunteered to be part of the group, emphasizing the need for representation from various departments."
+    ],
+    "next_steps": [
+      "Form a CSR working group with representatives from different departments.",
+      "Schedule a follow-up meeting to define the working group\u2019s objectives and timeline.",
+      "Develop a comprehensive CSR plan with a target for implementation within the next quarter."
+    ]
+  },
+  "vtt_data": "WEBVTT\n\n00:00:00 --> 00:00:05 Fatima: Good morning everyone, welcome to today's meeting on Corporate Social Responsibility. 00:00:05 --> 00:00:20 Alexei: Thanks Fatima. Before we begin, I'd like to briefly review the agenda for today's discussion. We'll be covering the importance of CSR, recent trends, and how our company can improve its practices. 00:00:20 --> 00:01:00 Carlos: I'd like to add that we also have a special guest, John from the sustainability department, who will share some insights on our current initiatives. 00:01:00 --> 00:02:00 John: Hi everyone, thanks for having me. I'll be discussing our current efforts in reducing carbon emissions and increasing community engagement. 00:02:00 --> 00:04:00 Hiroshi: I'd like to ask, how do we measure the success of our CSR initiatives? Are we using any specific metrics or benchmarks? 00:04:00 --> 00:05:00 Fatima: Great question, Hiroshi. That's something we'll be discussing later in the meeting. Alexei, can you walk us through some of the recent trends in CSR? 00:05:00 --> 00:08:00 Alexei: Certainly. One trend we're seeing is the increased focus on transparency and accountability. Companies are being held to higher standards by consumers and stakeholders. 00:08:00 --> 00:10:00 Carlos: That's interesting. How do you think this will impact our company's reputation and bottom line? 00:10:00 --> 00:12:00 John: Well, research has shown that companies with strong CSR practices tend to outperform those without. It's not just about doing good, but also about doing well. 00:12:00 --> 00:15:00 Hiroshi: I'd like to add that our Asian markets are particularly sensitive to CSR issues. We need to ensure we're meeting local expectations and regulations. 00:15:00 --> 00:18:00 Fatima: Thank you, Hiroshi. That's an important point. Alexei, can you summarize some of the key takeaways from our discussion so far? 00:18:00 --> 00:20:00 Alexei: Sure. We've covered the importance of CSR, recent trends, and some of the benefits of strong CSR practices. 00:20:00 --> 00:25:00 Carlos: I'd like to propose that we establish a CSR working group to further develop our initiatives and track progress. 00:25:00 --> 00:28:00 John: I agree. It would be beneficial to have a dedicated team focused on CSR issues. 00:28:00 --> 00:30:00 Hiroshi: I'd like to volunteer to join the working group. I think it's essential we have representation from various departments. 00:30:00 --> 00:35:00 Fatima: Great, let's make that happen. We'll schedule a follow-up meeting to discuss the working group's objectives and timeline. 00:35:00 --> 00:40:00 Alexei: Before we adjourn, are there any final questions or comments? 00:40:00 --> 00:45:00 Carlos: Just one question, what's the target timeline for implementing our new CSR initiatives? 00:45:00 --> 00:50:00 Fatima: We're aiming to have a comprehensive plan in place within the next quarter. 00:50:00 --> 00:55:00 John: I think that's ambitious, but achievable. We'll need to work closely together to make it happen. 00:55:00 --> 00:58:00 Fatima: Thank you all for your participation and input today. Let's keep the momentum going and make a positive impact on our communities and the environment.",
+  "recording_files": [
+    {
+      "id": "2bd78669-fc10-4dc5-a62c-b1e56a5520b9",
+      "meeting_id": "m7",
+      "recording_start": "2026-01-15T14:00:00Z",
+      "recording_end": "2026-01-15T15:00:00Z",
+      "file_type": "TRANSCRIPT",
+      "file_extension": "VTT",
+      "file_size": 3192,
+      "play_url": "https://api.zoom.us/rec/play/2bd78669",
+      "download_url": "https://api.zoom.us/rec/download/m7/transcript.vtt",
+      "status": "completed",
+      "recording_type": "shared_screen_with_speaker_view"
+    },
+    {
+      "id": "15504d38-f789-4dc1-9b8c-da67988d48c2",
+      "meeting_id": "m7",
+      "recording_start": "2026-01-15T14:00:00Z",
+      "recording_end": "2026-01-15T15:00:00Z",
+      "file_type": "MP4",
+      "file_extension": "MP4",
+      "file_size": 50000000,
+      "play_url": "https://api.zoom.us/rec/play/15504d38",
+      "download_url": "https://api.zoom.us/rec/download/m7/recording.mp4",
+      "status": "completed",
+      "recording_type": "shared_screen_with_speaker_view"
+    }
+  ],
+  "participants": [
+    {
+      "id": "p1",
+      "name": "Alice Chen",
+      "user_id": "u1",
+      "user_email": "alice.chen@zoom-mock.com",
+      "join_time": "2026-01-15T14:00:00Z",
+      "leave_time": "2026-01-15T15:00:00Z",
+      "duration": 3600
+    },
+    {
+      "id": "p2",
+      "name": "Bob Martinez",
+      "user_id": "u2",
+      "user_email": "bob.martinez@zoom-mock.com",
+      "join_time": "2026-01-15T14:00:00Z",
+      "leave_time": "2026-01-15T15:00:00Z",
+      "duration": 3600
+    }
+  ]
+}

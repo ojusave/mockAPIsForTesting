@@ -1,0 +1,93 @@
+{
+  "uuid": "m2",
+  "id": "m2",
+  "host_id": "u1",
+  "host_email": "u1@zoom-mock.com",
+  "topic": "Product Development Meeting",
+  "type": 2,
+  "start_time": "2026-01-15T14:00:00Z",
+  "duration": 60,
+  "timezone": "America/New_York",
+  "created_at": "2026-01-01T00:00:00Z",
+  "join_url": "https://api.zoom.us/j/m2",
+  "start_url": "https://api.zoom.us/s/m2",
+  "password": "abc123",
+  "agenda": "The meeting focused on the new product launch, product roadmap, and feature prioritization. Key discussions involved the establishment of a design working group, metrics for success, and initiatives t",
+  "settings": {
+    "host_video": true,
+    "participant_video": false,
+    "join_before_host": false,
+    "mute_upon_entry": true,
+    "waiting_room": true,
+    "meeting_authentication": false
+  },
+  "summary": {
+    "summary_title": "Product Development Meeting",
+    "summary_overview": "The meeting focused on the new product launch, product roadmap, and feature prioritization. Key discussions involved the establishment of a design working group, metrics for success, and initiatives to increase user experience and customer satisfaction.",
+    "summary_details": [
+      "Michael opened the meeting and introduced the topic of product development. ",
+      "Emily reviewed the agenda, which included discussing the new product launch, product roadmap, and feature prioritization.",
+      "Sarah announced that she would present insights on the product design process.",
+      "Sarah shared the company's design principles and how they inform product development decisions.",
+      "Michael inquired about how product development success is measured, raising the need for clear metrics and benchmarks.",
+      "David highlighted a recent trend in product development: the increased focus on user experience.",
+      "Sarah asked how this trend would impact the company's product offerings and customer satisfaction, to which Michael responded that user-centered design can lead to increased customer satisfaction and loyalty.",
+      "Emily added that the product roadmap is particularly focused on meeting the needs of the target audience, and that the company needs to meet their expectations and preferences.",
+      "David proposed the formation of a design working group to further develop design principles and track progress. Sarah volunteered to be part of the group, emphasizing the need for a dedicated team focused on design efforts."
+    ],
+    "next_steps": [
+      "Form a design working group with representatives from different departments.",
+      "Schedule a follow-up meeting to define the working group's objectives and timeline.",
+      "Develop a comprehensive design plan with a target for implementation within the next quarter."
+    ]
+  },
+  "vtt_data": "WEBVTT\n\n00:00:00 --> 00:00:05 Michael: Good morning everyone, welcome to today's product development meeting. 00:00:05 --> 00:00:20 Emily: Thanks Michael. Before we begin, I'd like to briefly review the agenda for today's discussion. We'll be covering our new product launch, product roadmap, and feature prioritization. 00:00:20 --> 00:01:00 David: I'd like to add that we also have a special guest, Sarah from the design department, who will share some insights on our product design process. 00:01:00 --> 00:02:00 Sarah: Hi everyone, thanks for having me. I'll be discussing our design principles and how they inform our product development decisions. 00:02:00 --> 00:04:00 Michael: I'd like to ask, how do we measure the success of our product development efforts? Are we using any specific metrics or benchmarks? 00:04:00 --> 00:05:00 Emily: Great question, Michael. That's something we'll be discussing later in the meeting. David, can you walk us through some of the recent trends in product development? 00:05:00 --> 00:08:00 David: Certainly. One trend we're seeing is the increased focus on user experience. Companies are prioritizing user-centered design and testing. 00:08:00 --> 00:10:00 Sarah: That's interesting. How do you think this will impact our company's product offerings and customer satisfaction? 00:10:00 --> 00:12:00 Michael: Well, research has shown that user-centered design can lead to increased customer satisfaction and loyalty. It's not just about creating products, but also about creating experiences. 00:12:00 --> 00:15:00 Emily: I'd like to add that our product roadmap is particularly focused on meeting the needs of our target audience. We need to ensure we're meeting their expectations and preferences. 00:15:00 --> 00:18:00 David: Thank you, Emily. That's an important point. Michael, can you summarize some of the key takeaways from our discussion so far? 00:18:00 --> 00:20:00 Michael: Sure. We've covered the new product launch, product roadmap, and feature prioritization. 00:20:00 --> 00:25:00 Sarah: I'd like to propose that we establish a design working group to further develop our design principles and track progress. 00:25:00 --> 00:28:00 David: I agree. It would be beneficial to have a dedicated team focused on design efforts. 00:28:00 --> 00:30:00 Michael: Great, let's make that happen. We'll schedule a follow-up meeting to discuss the working group's objectives and timeline. 00:30:00 --> 00:35:00 Emily: Before we adjourn, are there any final questions or comments? 00:35:00 --> 00:40:00 Sarah: Just one question, what's the target timeline for implementing our new design principles? 00:40:00 --> 00:45:00 Michael: We're aiming to have a comprehensive plan in place within the next quarter. 00:45:00 --> 00:50:00 David: I think that's ambitious, but achievable. We'll need to work closely together to make it happen. 00:50:00 --> 00:55:00 Michael: Thank you all for your participation and input today. Let's keep the momentum going and make a positive impact on our products and customers.",
+  "recording_files": [
+    {
+      "id": "e11a64ff-0a6e-42da-8005-dd6a9d3c4020",
+      "meeting_id": "m2",
+      "recording_start": "2026-01-15T14:00:00Z",
+      "recording_end": "2026-01-15T15:00:00Z",
+      "file_type": "TRANSCRIPT",
+      "file_extension": "VTT",
+      "file_size": 3050,
+      "play_url": "https://api.zoom.us/rec/play/e11a64ff",
+      "download_url": "https://api.zoom.us/rec/download/m2/transcript.vtt",
+      "status": "completed",
+      "recording_type": "shared_screen_with_speaker_view"
+    },
+    {
+      "id": "721f7aa3-d584-4472-b1a1-35206b0520f5",
+      "meeting_id": "m2",
+      "recording_start": "2026-01-15T14:00:00Z",
+      "recording_end": "2026-01-15T15:00:00Z",
+      "file_type": "MP4",
+      "file_extension": "MP4",
+      "file_size": 50000000,
+      "play_url": "https://api.zoom.us/rec/play/721f7aa3",
+      "download_url": "https://api.zoom.us/rec/download/m2/recording.mp4",
+      "status": "completed",
+      "recording_type": "shared_screen_with_speaker_view"
+    }
+  ],
+  "participants": [
+    {
+      "id": "p1",
+      "name": "Alice Chen",
+      "user_id": "u1",
+      "user_email": "alice.chen@zoom-mock.com",
+      "join_time": "2026-01-15T14:00:00Z",
+      "leave_time": "2026-01-15T15:00:00Z",
+      "duration": 3600
+    },
+    {
+      "id": "p2",
+      "name": "Bob Martinez",
+      "user_id": "u2",
+      "user_email": "bob.martinez@zoom-mock.com",
+      "join_time": "2026-01-15T14:00:00Z",
+      "leave_time": "2026-01-15T15:00:00Z",
+      "duration": 3600
+    }
+  ]
+}
