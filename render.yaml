@@ -1,0 +1,17 @@
+# Render Blueprint: Mock Zoom API
+# Deploy: https://dashboard.render.com/blueprint/new?repo=https://github.com/ojusave/mockAPIsForTesting
+
+services:
+  - type: web
+    name: mock-zoom-api
+    runtime: python
+    plan: free
+
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:asgi_app --host 0.0.0.0 --port $PORT
+
+    envVars:
+      - key: BASE_URL
+        sync: false  # Set in Dashboard to your deployed URL (e.g. https://mock-zoom-api.onrender.com) for join_url etc.
+      - key: PYTHON_VERSION
+        value: "3.11.0"
